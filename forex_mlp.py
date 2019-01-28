@@ -1,19 +1,22 @@
 
 from __future__ import print_function
 
+import sys
 import keras
 from keras.datasets import mnist
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.optimizers import RMSprop
 import pandas as pd
-import sys
+
+import gendata as data
 
 batch_size = 128
 num_classes = 3
 epochs = 20
 
 fx = pd.read_csv(sys.argv[1].split(".")[0] + "-x.csv")
+input_cols = len(fx.columns)
 fy = pd.read_csv(sys.argv[1].split(".")[0] + "-y.csv")
 
 x = fx.values
@@ -33,7 +36,7 @@ y_train = y[0:split_index]
 y_test = y[split_index:]
 
 model = Sequential()
-model.add(Dense(512, activation='relu', input_shape=(800,)))
+model.add(Dense(512, activation='relu', input_shape=(input_cols,)))
 model.add(Dropout(0.2))
 model.add(Dense(512, activation='relu'))
 model.add(Dropout(0.2))
