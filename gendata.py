@@ -2,8 +2,7 @@ import plotly as py
 import plotly.graph_objs as go
 
 import pandas as pd
-from datetime import datetime
-
+import numpy as np
 def gendata(csv_file, validate_split=0.9, period_num=100):
 
     df = pd.read_csv(csv_file)
@@ -11,11 +10,13 @@ def gendata(csv_file, validate_split=0.9, period_num=100):
     print 'Period:%d' % period_num
     print 'Data records:%d' % total
 
+    datax = []
+    datay = []
     for start in range(0, total - 2*period_num):
         high = max(df.HIGH[start:start+period_num])
         low = min(df.LOW[start:start+period_num])
-        new_high = max(df.HIGH[start+m:start+2*period_num])
-        new_low = min(df.LOW[start+m:start+2*period_num])
+        new_high = max(df.HIGH[start+period_num:start+2*period_num])
+        new_low = min(df.LOW[start+period_num:start+2*period_num])
 
         mag = high - low
 
@@ -36,19 +37,13 @@ def gendata(csv_file, validate_split=0.9, period_num=100):
             no_trend = 1
 
         first = True
+        row = []
         for o,h,l,c in zip(norm_opens, norm_highs, norm_lows, norm_closes):
-            if first:
-                fx.write("%.4f,%.4f,%.4f,%.4f" % (o,h,l,c))
-                first = False
-            else:
-                fx.write(",%.4f,%.4f,%.4f,%.4f" % (o,h,l,c))
+            row += [o,h,l,c]
 
+        datax.append(row)
+        datay.append([up_trend, down_trend, no_trend])
+    split_index = int(len(datax)*0.9)
+    print "split at %d" % split_index
 
-
-        fx.write("\n")
-
-        fy.write("%d,%d,%d\n"%(up_trend, down_trend, no_trend))
-
-    fx.close()
-    fy.close()
-
+    return (np.array(datax[:split_index]), np.array(datay[:split_index])), (np.array(datax[split_index:]), np.array(datay[split_index:]))

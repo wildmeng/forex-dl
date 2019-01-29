@@ -13,27 +13,10 @@ import gendata as data
 
 batch_size = 128
 num_classes = 3
-epochs = 20
+epochs = 10
 
-fx = pd.read_csv(sys.argv[1].split(".")[0] + "-x.csv")
-input_cols = len(fx.columns)
-fy = pd.read_csv(sys.argv[1].split(".")[0] + "-y.csv")
-
-x = fx.values
-y = fy.values
-total = len(x)
-print("total = %d"%total)
-print(type(x))
-if len(x) != len(y):
-    print("x!=y")
-    sys.exit()
-
-split_index = int(total*0.9)
-print("split at %d" % split_index)
-x_train = x[0:split_index]
-x_test = x[split_index:]
-y_train = y[0:split_index]
-y_test = y[split_index:]
+(x_train, y_train), (x_test, y_test) = data.gendata(sys.argv[1])
+input_cols = x_train.shape[1]
 
 model = Sequential()
 model.add(Dense(512, activation='relu', input_shape=(input_cols,)))
