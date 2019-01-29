@@ -47,3 +47,42 @@ def gendata(csv_file, validate_split=0.9, period_num=100):
     print "split at %d" % split_index
 
     return (np.array(datax[:split_index]), np.array(datay[:split_index])), (np.array(datax[split_index:]), np.array(datay[split_index:]))
+
+
+def showdata(csv_file, index , uptrend, downtrend, notrend, validate_split=0.9, period_num=100):
+
+	df = pd.read_csv(csv_file)
+	split_index = int(len(df)*0.9)
+
+	start = split_index
+	m = period_num
+	total = len(df)
+
+	if start + m*2 >= total:
+	    print "invalid parameters"
+	    sys.exit()
+
+	high = max(df.HIGH[start:start+m])
+	low = min(df.LOW[start:start+m])
+	new_high = max(df.HIGH[start+m:start+2*m])
+	new_low = min(df.LOW[start+m:start+2*m])
+
+	name = "no-trend"
+	if new_high > high and new_low > low:
+	    name = "up-trend"
+	elif new_low < low and new_high < high:
+	    name = "down-trend"
+	else:
+	    pass
+
+	name += '--up:%.4f-down:%.f4-swing:%0.4f.html' % (uptrend, downtrend, notrend)
+
+	trace = go.Ohlc(#x=df['DTYYYYMMDD'],
+	                open=df.OPEN[start: start+2*m],
+	                high=df.HIGH[start: start+2*m],
+	                low=df.LOW[start: start+2*m],
+	                close=df.CLOSE[start: start+2*m])
+
+	data = [trace]
+	    #py.iplot(data, filename='simple_candlestick')
+	py.offline.plot(data, filename=name, auto_open=True)
