@@ -54,7 +54,7 @@ def showdata(csv_file, index , uptrend, downtrend, notrend, validate_split=0.9, 
 	df = pd.read_csv(csv_file)
 	split_index = int(len(df)*0.9)
 
-	start = split_index
+	start = split_index + index
 	m = period_num
 	total = len(df)
 
