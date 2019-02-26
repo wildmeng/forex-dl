@@ -17,12 +17,16 @@ import gendata as data
 model_file_name = "mlp_model.json"
 model_weights_file_name = "mlp_model.h5"
 
+data_file = "eurusd-60min.csv"
+
+period=100
+
 def train_mlp():
     batch_size = 128
     num_classes = 3
-    epochs = 10
+    epochs = 20
 
-    (x_train, y_train), (x_test, y_test) = data.gendata(sys.argv[1])
+    (x_train, y_train), (x_test, y_test) = data.gendata(data_file, period_num=period)
     input_cols = x_train.shape[1]
 
     model = Sequential()
@@ -60,7 +64,10 @@ def train_mlp():
     print("Saved model to %s"%model_file_name)
 
 
-if os.path.isfile(model_file_name) and os.access(model_file_name, os.R_OK):
+def import_model():
+    if not os.path.isfile(model_file_name) or not os.access(model_file_name, os.R_OK):
+        print("model doesn't exist")
+        return None
 
     json_file = open(model_file_name, 'r')
     loaded_model_json = json_file.read()
@@ -72,15 +79,18 @@ if os.path.isfile(model_file_name) and os.access(model_file_name, os.R_OK):
 
     # evaluate loaded model on test data
     loaded_model.compile(loss='categorical_crossentropy',
-                  optimizer=RMSprop(),
-                  metrics=['accuracy'])
+               optimizer=RMSprop(),
+               metrics=['accuracy'])
+    return loaded_model
 
-    (x_train, y_train), (x_test, y_test) = data.gendata(sys.argv[1])
-    score = loaded_model.evaluate(x_test, y_test, verbose=0)
-    print("%s: %.2f%%" % (loaded_model.metrics_names[1], score[1]*100))
-
-    score = loaded_model.evaluate(x_train, y_train, verbose=0)
-    print("%s: %.2f%%" % (loaded_model.metrics_names[1], score[1]*100))
-else:
+if sys.argv[1] == "train":
     train_mlp()
+elif sys.argv[1] == "check":
+    index = int(sys.argv[2])
+    model = import_model()
+    (x_train, y_train), (x_test, y_test) = data.gendata(data_file, period_num=period)
+    result = model.predict(x_test[index:index+1])
+    #result = model.predict(x_test)
+    #print(result)
+    data.showdata(data_file, index, result[0])
 

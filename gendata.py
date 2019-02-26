@@ -19,19 +19,26 @@ def gendata(csv_file, validate_split=0.9, period_num=100):
         new_low = min(df.LOW[start+period_num:start+2*period_num])
 
         mag = high - low
-
-        norm_opens = [(x-low)/mag for x in df.OPEN[start:start+period_num]]
-        norm_highs = [(x-low)/mag for x in df.HIGH[start:start+period_num]]
-        norm_lows = [(x-low)/mag for x in df.LOW[start:start+period_num]]
-        norm_closes = [(x-low)/mag for x in df.CLOSE[start:start+period_num]]
+        if mag == 0.0:
+		    norm_opens = [0]*period_num
+		    norm_highs = [0]*period_num
+		    norm_lows = [0]*period_num
+		    norm_closes = [0]*period_num
+        else:
+            norm_opens = [(x-low)/mag for x in df.OPEN[start:start+period_num]]
+            norm_highs = [(x-low)/mag for x in df.HIGH[start:start+period_num]]
+            norm_lows = [(x-low)/mag for x in df.LOW[start:start+period_num]]
+            norm_closes = [(x-low)/mag for x in df.CLOSE[start:start+period_num]]
 
         up_trend = 0
         down_trend = 0
         no_trend = 0
 
-        if new_high > high and new_low > low:
+        trend_mag = mag*0.01
+
+        if new_high > (high+trend_mag) and new_low > (low +trend_mag):
             up_trend = 1
-        elif new_low < low and new_high < high:
+        elif new_low < (low-trend_mag) and new_high < (high-trend_mag):
             down_trend = 1
         else:
             no_trend = 1
@@ -46,10 +53,10 @@ def gendata(csv_file, validate_split=0.9, period_num=100):
     split_index = int(len(datax)*0.9)
     print "split at %d" % split_index
 
-    return (np.array(datax[:split_index]), np.array(datay[:split_index])), (np.array(datax[split_index:]), np.array(datay[split_index:]))
+    return (np.array(datax[:split_index]), np.array(datay[:split_index])), (np.array(datax[split_index+period_num:]), np.array(datay[split_index+period_num:]))
 
 
-def showdata(csv_file, index , uptrend, downtrend, notrend, validate_split=0.9, period_num=100):
+def showdata(csv_file, index , trends, validate_split=0.9, period_num=100):
 
 	df = pd.read_csv(csv_file)
 	split_index = int(len(df)*0.9)
@@ -75,7 +82,7 @@ def showdata(csv_file, index , uptrend, downtrend, notrend, validate_split=0.9, 
 	else:
 	    pass
 
-	name += '--up:%.4f-down:%.f4-swing:%0.4f.html' % (uptrend, downtrend, notrend)
+	name += '--up:%.4f-down:%.4f-swing:%0.4f.html' % (trends[0], trends[1], trends[2])
 
 	trace = go.Ohlc(#x=df['DTYYYYMMDD'],
 	                open=df.OPEN[start: start+2*m],
