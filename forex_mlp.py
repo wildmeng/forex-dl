@@ -26,7 +26,7 @@ def train_mlp():
     num_classes = 3
     epochs = 20
 
-    (x_train, y_train), (x_test, y_test) = data.gendata(data_file, period_num=period)
+    (x_train, y_train), (x_test, y_test) = data.gendata3(data_file, period_num=period)
     input_cols = x_train.shape[1]
 
     model = Sequential()
