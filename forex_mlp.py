@@ -24,9 +24,9 @@ period=100
 def train_mlp():
     batch_size = 128
     num_classes = 3
-    epochs = 20
+    epochs = 5
 
-    (x_train, y_train), (x_test, y_test) = data.gendata3(data_file, period_num=period)
+    (x_train, y_train), (x_test, y_test) = data.gendata4(data_file, period_num=period)
     input_cols = x_train.shape[1]
 
     model = Sequential()

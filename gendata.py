@@ -3,6 +3,9 @@ import plotly.graph_objs as go
 
 import pandas as pd
 import numpy as np
+import pywt
+
+
 def gendata(csv_file, validate_split=0.9, period_num=100):
 
     df = pd.read_csv(csv_file)
@@ -56,6 +59,47 @@ def gendata(csv_file, validate_split=0.9, period_num=100):
 
 
 def gendata2(csv_file, validate_split=0.9, period_num=100):
+
+    df = pd.read_csv(csv_file)
+    total = len(df)
+    print 'Period:%d' % period_num
+    print 'Data records:%d' % total
+
+    datax = []
+    datay = []
+    for start in range(0, total - 2*period_num):
+        high = max(df.CLOSE[start:start+period_num])
+        low = min(df.CLOSE[start:start+period_num])
+        new_high = max(df.CLOSE[start+period_num:start+2*period_num])
+        new_low = min(df.CLOSE[start+period_num:start+2*period_num])
+
+        mag = high - low
+        if mag == 0.0:
+		    norm_closes = [0]*period_num
+        else:
+            norm_closes = [(x-low)/mag for x in df.CLOSE[start:start+period_num]]
+
+        up_trend = 0
+        down_trend = 0
+        no_trend = 0
+
+        trend_mag = mag*0.01
+
+        if new_high > (high+trend_mag) and new_low > (low +trend_mag):
+            up_trend = 1
+        elif new_low < (low-trend_mag) and new_high < (high-trend_mag):
+            down_trend = 1
+        else:
+            no_trend = 1
+
+        datax.append(norm_closes)
+        datay.append([up_trend, down_trend, no_trend])
+    split_index = int(len(datax)*0.9)
+    print "split at %d" % split_index
+
+    return (np.array(datax[:split_index]), np.array(datay[:split_index])), (np.array(datax[split_index+period_num:]), np.array(datay[split_index+period_num:]))
+
+def gendata21(csv_file, validate_split=0.9, period_num=100):
 
     df = pd.read_csv(csv_file)
     total = len(df)
@@ -158,6 +202,52 @@ def gendata3(csv_file, validate_split=0.9, period_num=100):
 
     return (np.array(datax[:split_index]), np.array(datay[:split_index])), (np.array(datax[split_index+period_num:]), np.array(datay[split_index+period_num:]))
 
+def gendata4(csv_file, validate_split=0.9, period_num=100):
+
+    df = pd.read_csv(csv_file)
+    total = len(df)
+    print 'Period:%d' % period_num
+    print 'Data records:%d' % total
+
+    datax = []
+    datay = []
+
+    (ca, cd) = pywt.dwt(df.CLOSE, "haar")
+    cat = pywt.threshold(ca, np.std(ca), mode="soft")
+    cdt = pywt.threshold(cd, np.std(cd), mode="soft")
+    pywt_closes = pywt.idwt(cat, cdt, "haar")
+
+    for start in range(0, total - 2*period_num):
+        high = max(pywt_closes[start:start+period_num])
+        low = min(pywt_closes[start:start+period_num])
+        new_high = max(pywt_closes[start+period_num:start+2*period_num])
+        new_low = min(pywt_closes[start+period_num:start+2*period_num])
+
+        mag = high - low
+        if mag == 0.0:
+		    norm_closes = [0]*period_num
+        else:
+            norm_closes = [(x-low)/mag for x in pywt_closes[start:start+period_num]]
+
+        up_trend = 0
+        down_trend = 0
+        no_trend = 0
+
+        trend_mag = mag*0.01
+
+        if new_high > (high+trend_mag) and new_low > (low +trend_mag):
+            up_trend = 1
+        elif new_low < (low-trend_mag) and new_high < (high-trend_mag):
+            down_trend = 1
+        else:
+            no_trend = 1
+
+        datax.append(norm_closes)
+        datay.append([up_trend, down_trend, no_trend])
+    split_index = int(len(datax)*0.9)
+    print "split at %d" % split_index
+
+    return (np.array(datax[:split_index]), np.array(datay[:split_index])), (np.array(datax[split_index+period_num:]), np.array(datay[split_index+period_num:]))
 
 def showdata(csv_file, index , trends, validate_split=0.9, period_num=100):
 
