@@ -3,10 +3,9 @@ import plotly.graph_objs as go
 
 import pandas as pd
 import numpy as np
-import pywt
 
 
-def gendata(csv_file, validate_split=0.9, period_num=100):
+def gendata1(csv_file, validate_split=0.9, period_num=100):
 
     df = pd.read_csv(csv_file)
     total = len(df)
@@ -99,155 +98,82 @@ def gendata2(csv_file, validate_split=0.9, period_num=100):
 
     return (np.array(datax[:split_index]), np.array(datay[:split_index])), (np.array(datax[split_index+period_num:]), np.array(datay[split_index+period_num:]))
 
-def gendata21(csv_file, validate_split=0.9, period_num=100):
-
+def gen_x_data(csv_file):
     df = pd.read_csv(csv_file)
     total = len(df)
-    print 'Period:%d' % period_num
     print 'Data records:%d' % total
 
     datax = []
     datay = []
-    for start in range(0, total - 2*period_num):
-        high = max(df.CLOSE[start:start+period_num])
-        low = min(df.CLOSE[start:start+period_num])
-        new_high = max(df.CLOSE[start+period_num:start+2*period_num])
-        new_low = min(df.CLOSE[start+period_num:start+2*period_num])
+    ma_periods = [1] + [i*5 for i in range(1,81)]
 
-        mag = high - low
-        if mag == 0.0:
-		    norm_closes = [0]*period_num
-        else:
-            norm_closes = [(x-low)/mag for x in df.CLOSE[start:start+period_num]]
+    trim = 500
 
-        up_trend = 0
-        down_trend = 0
-        no_trend = 0
-
-        trend_mag = mag*0.01
-
-        if new_high > (high+trend_mag) and new_low > (low +trend_mag):
-            up_trend = 1
-        elif new_low < (low-trend_mag) and new_high < (high-trend_mag):
-            down_trend = 1
-        else:
-            no_trend = 1
-
-        datax.append(norm_closes)
-        datay.append([up_trend, down_trend, no_trend])
-    split_index = int(len(datax)*0.9)
-    print "split at %d" % split_index
-
-    return (np.array(datax[:split_index]), np.array(datay[:split_index])), (np.array(datax[split_index+period_num:]), np.array(datay[split_index+period_num:]))
-
-def ma_data(close, index, period, num):
-    return [np.mean(close[x+1-period : x+1]) for x in range(index, index+num)]
-
-
-def gendata3(csv_file, validate_split=0.9, period_num=100):
-
-    df = pd.read_csv(csv_file)
-    total = len(df)
-    print 'Period:%d' % period_num
-    print 'Data records:%d' % total
-
-    datax = []
-    datay = []
-    ma_periods = [period_num/2, period_num, period_num*2]
-
-    for start in range(period_num*2, total - period_num*2):
-
-        if start % 100 == 0:
-            print "%d/%d" % (start, total)
-
-        high = max(df.CLOSE[start:start+period_num])
-        low = min(df.CLOSE[start:start+period_num])
-        new_high = max(df.CLOSE[start+period_num:start+2*period_num])
-        new_low = min(df.CLOSE[start+period_num:start+2*period_num])
-
-        up_trend = 0
-        down_trend = 0
-        no_trend = 0
-
-        trend_mag = (high-low)*0.01
-
-        if new_high > (high+trend_mag) and new_low > (low +trend_mag):
-            up_trend = 1
-        elif new_low < (low-trend_mag) and new_high < (high-trend_mag):
-            down_trend = 1
-        else:
-            no_trend = 1
-
+    # generate ma data
+    for start in range(trim , total - trim ):
         ma = []
         for p in ma_periods:
-            ma += ma_data(df.CLOSE, start, p, period_num)
+            ma.append(np.mean(df.CLOSE[start+1-p : start+1]))
 
-        #print df.CLOSE[start:start+period_num]
-
-        x = df.CLOSE[start:start+period_num].tolist() + ma
+        x = ma
         high_x = max(x)
         low_x = min(x)
         mag = high_x - low_x
 
         if high_x == low_x:
-            norm_closes = [1.0/len(x)]*len(x)
+            norm_x = [1.0/len(x)]*len(x)
         else:
             norm_x = [(c-low_x)/mag for c in x]
 
         datax.append(norm_x)
-        datay.append([up_trend, down_trend, no_trend])
 
-    split_index = int(len(datax)*0.9)
-    print "split at %d" % split_index
+    a = np.asarray(datax)
+    np.savetxt("x-%s"%csv_file, a, delimiter=',')
 
-    return (np.array(datax[:split_index]), np.array(datay[:split_index])), (np.array(datax[split_index+period_num:]), np.array(datay[split_index+period_num:]))
+# return [1,0,0]: open buy, [0,1,0] open sell, [0,0,1]: no deal
+def get_deal(high, low, start, end, price, take_profit=0.0001*100, stop_loss=0.0001*50):
+    buy_closed = False
+    sell_closed = False
+    for i in range(start, end):
+        if low[i] <= price - stop_loss:
+            buy_closed = True
 
-def gendata4(csv_file, validate_split=0.9, period_num=100):
+        if high[i] >= price + stop_loss:
+            sell_closed = True
+
+        if not buy_closed and high[i] >= price + take_profit:
+            return [1,0,0]
+        elif not sell_closed and low[i] <= price - take_profit:
+            return [0,1,0]
+
+    return [0,0,1]
+
+def gen_y_data(csv_file):
 
     df = pd.read_csv(csv_file)
     total = len(df)
-    print 'Period:%d' % period_num
-    print 'Data records:%d' % total
-
-    datax = []
     datay = []
 
-    (ca, cd) = pywt.dwt(df.CLOSE, "haar")
-    cat = pywt.threshold(ca, np.std(ca), mode="soft")
-    cdt = pywt.threshold(cd, np.std(cd), mode="soft")
-    pywt_closes = pywt.idwt(cat, cdt, "haar")
+    trim = 500
 
-    for start in range(0, total - 2*period_num):
-        high = max(pywt_closes[start:start+period_num])
-        low = min(pywt_closes[start:start+period_num])
-        new_high = max(pywt_closes[start+period_num:start+2*period_num])
-        new_low = min(pywt_closes[start+period_num:start+2*period_num])
+    for start in range(trim , total - trim):
+        result = get_deal(df.HIGH, df.LOW, start+1, start+1 + 200, df.CLOSE[start])
+        datay.append(result)
 
-        mag = high - low
-        if mag == 0.0:
-		    norm_closes = [0]*period_num
-        else:
-            norm_closes = [(x-low)/mag for x in pywt_closes[start:start+period_num]]
+    a = np.asarray(datay)
+    np.savetxt("y-%s"%csv_file, a, delimiter=',')
 
-        up_trend = 0
-        down_trend = 0
-        no_trend = 0
+def gendata(csv_file, validate_split=0.8):
 
-        trend_mag = mag*0.01
+    datax = np.genfromtxt("x-"+csv_file, delimiter=',');
+    datay = np.genfromtxt("y-"+csv_file, delimiter=',');
 
-        if new_high > (high+trend_mag) and new_low > (low +trend_mag):
-            up_trend = 1
-        elif new_low < (low-trend_mag) and new_high < (high-trend_mag):
-            down_trend = 1
-        else:
-            no_trend = 1
+    assert len(datax) == len(datay)
 
-        datax.append(norm_closes)
-        datay.append([up_trend, down_trend, no_trend])
-    split_index = int(len(datax)*0.9)
-    print "split at %d" % split_index
-
-    return (np.array(datax[:split_index]), np.array(datay[:split_index])), (np.array(datax[split_index+period_num:]), np.array(datay[split_index+period_num:]))
+    split_index = int(len(datax)*validate_split)
+    x = np.split(datax, [split_index])
+    y = np.split(datay, [split_index])
+    return (x[0], y[0]), (x[1], y[1])
 
 def showdata(csv_file, index , trends, validate_split=0.9, period_num=100):
 

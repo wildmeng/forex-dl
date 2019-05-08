@@ -22,17 +22,18 @@ data_file = "eurusd-60min.csv"
 period=100
 
 def train_mlp():
-    batch_size = 128
+    batch_size = 256
     num_classes = 3
     epochs = 5
 
-    (x_train, y_train), (x_test, y_test) = data.gendata4(data_file, period_num=period)
+    (x_train, y_train), (x_test, y_test) = data.gendata(data_file)
     input_cols = x_train.shape[1]
+    num_classes = y_train.shape[1]
 
     model = Sequential()
-    model.add(Dense(512, activation='relu', input_shape=(input_cols,)))
+    model.add(Dense(256, activation='relu', input_shape=(input_cols,)))
     model.add(Dropout(0.2))
-    model.add(Dense(512, activation='relu'))
+    model.add(Dense(256, activation='relu'))
     model.add(Dropout(0.2))
     model.add(Dense(num_classes, activation='softmax'))
 
@@ -85,10 +86,14 @@ def import_model():
 
 if sys.argv[1] == "train":
     train_mlp()
+elif sys.argv[1] == "data-x":
+    data.gen_x_data("eurusd-60min.csv")
+elif sys.argv[1] == "data-y":
+    data.gen_y_data("eurusd-60min.csv")
 elif sys.argv[1] == "check":
     index = int(sys.argv[2])
     model = import_model()
-    (x_train, y_train), (x_test, y_test) = data.gendata(data_file, period_num=period)
+    (x_train, y_train), (x_test, y_test) = data.gendata(data_file, period_num=100)
     result = model.predict(x_test[index:index+1])
     #result = model.predict(x_test)
     #print(result)
