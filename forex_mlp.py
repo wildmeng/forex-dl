@@ -9,7 +9,7 @@ import keras
 from keras.datasets import mnist
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
-from keras.optimizers import RMSprop
+from keras.optimizers import RMSprop, Adam
 from keras.models import model_from_json
 
 import gendata as data
@@ -31,23 +31,25 @@ def train_mlp():
     num_classes = y_train.shape[1]
 
     model = Sequential()
-    model.add(Dense(256, activation='relu', input_shape=(input_cols,)))
+    model.add(Dense(64, activation='relu', input_shape=(input_cols,)))
     model.add(Dropout(0.2))
-    model.add(Dense(256, activation='relu'))
+    model.add(Dense(64, activation='relu'))
     model.add(Dropout(0.2))
     model.add(Dense(num_classes, activation='softmax'))
 
     model.summary()
 
     model.compile(loss='categorical_crossentropy',
-                  optimizer=RMSprop(),
+    #model.compile(loss='mean_squared_error',
+                  #optimizer=RMSprop(),
+                  optimizer=Adam(),
                   metrics=['accuracy'])
 
     history = model.fit(x_train, y_train,
                         batch_size=batch_size,
                         epochs=epochs,
                         verbose=1,
-                        validation_data=(x_test, y_test))
+                        validation_data=(x_test, y_test), shuffle=True)
 
     score = model.evaluate(x_test, y_test, verbose=1)
 
@@ -80,7 +82,8 @@ def import_model():
 
     # evaluate loaded model on test data
     loaded_model.compile(loss='categorical_crossentropy',
-               optimizer=RMSprop(),
+	       optimizer=Adam(),
+               #optimizer=RMSprop(),
                metrics=['accuracy'])
     return loaded_model
 
@@ -93,9 +96,10 @@ elif sys.argv[1] == "data-y":
 elif sys.argv[1] == "check":
     index = int(sys.argv[2])
     model = import_model()
-    (x_train, y_train), (x_test, y_test) = data.gendata(data_file, period_num=100)
-    result = model.predict(x_test[index:index+1])
-    #result = model.predict(x_test)
-    #print(result)
-    data.showdata(data_file, index, result[0])
+    (x_train, y_train), (x_test, y_test) = data.gendata(data_file)
+    #result = model.predict(x_test[index:index+1])
+    result = model.predict(x_test[index:index+100])
+    print(y_test[index:index+100])
+    print(result)
+    # data.showdata(data_file, index, result[0])
 

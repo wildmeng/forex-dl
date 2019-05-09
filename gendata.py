@@ -130,8 +130,18 @@ def gen_x_data(csv_file):
     a = np.asarray(datax)
     np.savetxt("x-%s"%csv_file, a, delimiter=',')
 
+# return [1,0]: open buy, [0,1] non-buy
+def get_buy_deal(high, low, start, end, price, take_profit=0.0001*100, stop_loss=0.0001*50):
+    for i in range(start, end):
+        if low[i] <= price - stop_loss:
+            return [0,1] 
+
+        if high[i] >= price + take_profit:
+            return [1,0]
+
+    return [0,1]
 # return [1,0,0]: open buy, [0,1,0] open sell, [0,0,1]: no deal
-def get_deal(high, low, start, end, price, take_profit=0.0001*100, stop_loss=0.0001*50):
+def get_deal(high, low, start, end, price, take_profit=0.0001*50, stop_loss=0.0001*25):
     buy_closed = False
     sell_closed = False
     for i in range(start, end):
@@ -156,12 +166,26 @@ def gen_y_data(csv_file):
 
     trim = 500
 
+    buy = 0
+    sell = 0
+    invalid = 0
     for start in range(trim , total - trim):
-        result = get_deal(df.HIGH, df.LOW, start+1, start+1 + 200, df.CLOSE[start])
-        datay.append(result)
+        result = get_deal(df.HIGH, df.LOW, start+1, start+1 + 300, df.CLOSE[start])
+        if result[0] == 1:
+	    datay.append([1,0])
+            buy += 1
+        elif result[1] == 1:
+	    datay.append([0,1])
+            sell += 1
+        else:
+	    datay.append([0,1])
+            invalid += 1
 
     a = np.asarray(datay)
     np.savetxt("y-%s"%csv_file, a, delimiter=',')
+    print buy, sell, invalid
+
+    
 
 def gendata(csv_file, validate_split=0.8):
 
