@@ -3,6 +3,8 @@ import plotly.graph_objs as go
 
 import pandas as pd
 import numpy as np
+from operator import add
+import ntpath
 
 
 def gendata1(csv_file, validate_split=0.9, period_num=100):
@@ -128,20 +130,21 @@ def gen_x_data(csv_file):
         datax.append(norm_x)
 
     a = np.asarray(datax)
-    np.savetxt("x-%s"%csv_file, a, delimiter=',')
+    np.savetxt("x-%s"%ntpath.basename(csv_file), a, delimiter=',')
 
 # return [1,0]: open buy, [0,1] non-buy
 def get_buy_deal(high, low, start, end, price, take_profit=0.0001*100, stop_loss=0.0001*50):
     for i in range(start, end):
         if low[i] <= price - stop_loss:
-            return [0,1] 
+            return [0,1]
 
         if high[i] >= price + take_profit:
             return [1,0]
 
     return [0,1]
+
 # return [1,0,0]: open buy, [0,1,0] open sell, [0,0,1]: no deal
-def get_deal(high, low, start, end, price, take_profit=0.0001*50, stop_loss=0.0001*25):
+def get_deal(high, low, start, end, price, take_profit=0.0001*10, stop_loss=0.0001*5):
     buy_closed = False
     sell_closed = False
     for i in range(start, end):
@@ -151,12 +154,15 @@ def get_deal(high, low, start, end, price, take_profit=0.0001*50, stop_loss=0.00
         if high[i] >= price + stop_loss:
             sell_closed = True
 
-        if not buy_closed and high[i] >= price + take_profit:
-            return [1,0,0]
-        elif not sell_closed and low[i] <= price - take_profit:
-            return [0,1,0]
+        if buy_closed and sell_closed:
+            return [0,0,1,0]
 
-    return [0,0,1]
+        if not buy_closed and high[i] >= price + take_profit:
+            return [1,0,0,0]
+        elif not sell_closed and low[i] <= price - take_profit:
+            return [0,1,0,0]
+
+    return [0,0,0,1]
 
 def gen_y_data(csv_file):
 
@@ -166,31 +172,25 @@ def gen_y_data(csv_file):
 
     trim = 500
 
-    buy = 0
-    sell = 0
-    invalid = 0
+    sum = [0,0,0,0]
     for start in range(trim , total - trim):
-        result = get_deal(df.HIGH, df.LOW, start+1, start+1 + 300, df.CLOSE[start])
+        result = get_deal(df.HIGH, df.LOW, start+1, start+1 + 100, df.CLOSE[start])
         if result[0] == 1:
-	    datay.append([1,0])
-            buy += 1
-        elif result[1] == 1:
-	    datay.append([0,1])
-            sell += 1
+	        datay.append([1,0])
         else:
-	    datay.append([0,1])
-            invalid += 1
+	        datay.append([0,1])
+
+        sum = list(map(add, sum, result))
+
+        print '{0}\r'.format(sum)
 
     a = np.asarray(datay)
-    np.savetxt("y-%s"%csv_file, a, delimiter=',')
-    print buy, sell, invalid
-
-    
+    np.savetxt("y-%s"%ntpath.basename(csv_file), a, delimiter=',')
 
 def gendata(csv_file, validate_split=0.8):
 
-    datax = np.genfromtxt("x-"+csv_file, delimiter=',');
-    datay = np.genfromtxt("y-"+csv_file, delimiter=',');
+    datax = np.genfromtxt("x-"+ntpath.basename(csv_file), delimiter=',');
+    datay = np.genfromtxt("y-"+ntpath.basename(csv_file), delimiter=',');
 
     assert len(datax) == len(datay)
 

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 from __future__ import print_function
 
@@ -17,9 +18,8 @@ import gendata as data
 model_file_name = "mlp_model.json"
 model_weights_file_name = "mlp_model.h5"
 
-data_file = "eurusd-60min.csv"
+data_file = "eurusd-1m/DAT_ASCII_EURUSD_M1_2016.csv"
 
-period=100
 
 def train_mlp():
     batch_size = 256
@@ -90,9 +90,9 @@ def import_model():
 if sys.argv[1] == "train":
     train_mlp()
 elif sys.argv[1] == "data-x":
-    data.gen_x_data("eurusd-60min.csv")
+    data.gen_x_data(data_file)
 elif sys.argv[1] == "data-y":
-    data.gen_y_data("eurusd-60min.csv")
+    data.gen_y_data(data_file)
 elif sys.argv[1] == "check":
     index = int(sys.argv[2])
     model = import_model()
