@@ -6,6 +6,9 @@ import numpy as np
 from operator import add
 import ntpath
 
+import plotly.graph_objs as go
+from plotly.offline import plot, iplot
+
 
 def gendata1(csv_file, validate_split=0.9, period_num=100):
 
@@ -107,41 +110,25 @@ def gen_x_data(csv_file):
 
     datax = []
     datay = []
-    ma_periods = [1] + [i*5 for i in range(1,81)]
+    ma_periods = [1, 5, 10, 20, 40,80,160, 320]
 
     trim = 500
 
     # generate ma data
     for start in range(trim , total - trim ):
+
+        if start %10000 == 0:
+            print start
+
         ma = []
-        for p in ma_periods:
-            ma.append(np.mean(df.CLOSE[start+1-p : start+1]))
+        for i in range(start, start - 20, -2):
+            for p in ma_periods:
+                ma.append(np.mean(df.CLOSE[i+1-p : i+1]))
 
-        x = ma
-        high_x = max(x)
-        low_x = min(x)
-        mag = high_x - low_x
-
-        if high_x == low_x:
-            norm_x = [1.0/len(x)]*len(x)
-        else:
-            norm_x = [(c-low_x)/mag for c in x]
-
-        datax.append(norm_x)
+        datax.append(ma)
 
     a = np.asarray(datax)
     np.savetxt("x-%s"%ntpath.basename(csv_file), a, delimiter=',')
-
-# return [1,0]: open buy, [0,1] non-buy
-def get_buy_deal(high, low, start, end, price, take_profit=0.0001*100, stop_loss=0.0001*50):
-    for i in range(start, end):
-        if low[i] <= price - stop_loss:
-            return [0,1]
-
-        if high[i] >= price + take_profit:
-            return [1,0]
-
-    return [0,1]
 
 # return [1,0,0]: open buy, [0,1,0] open sell, [0,0,1]: no deal
 def get_deal(high, low, start, end, price, take_profit=0.0001*10, stop_loss=0.0001*5):
@@ -172,17 +159,8 @@ def gen_y_data(csv_file):
 
     trim = 500
 
-    sum = [0,0,0,0]
     for start in range(trim , total - trim):
-        result = get_deal(df.HIGH, df.LOW, start+1, start+1 + 100, df.CLOSE[start])
-        if result[0] == 1:
-	        datay.append([1,0])
-        else:
-	        datay.append([0,1])
-
-        sum = list(map(add, sum, result))
-
-        print '{0}\r'.format(sum)
+        datay.append(df.CLOSE[start + 20])
 
     a = np.asarray(datay)
     np.savetxt("y-%s"%ntpath.basename(csv_file), a, delimiter=',')
@@ -199,40 +177,25 @@ def gendata(csv_file, validate_split=0.8):
     y = np.split(datay, [split_index])
     return (x[0], y[0]), (x[1], y[1])
 
-def showdata(csv_file, index , trends, validate_split=0.9, period_num=100):
+def showdata(csv_file, index = 0, validate_split=0.8,  predicted=[]):
 
-	df = pd.read_csv(csv_file)
-	split_index = int(len(df)*0.9)
+    trim = 5000
+    df = pd.read_csv(csv_file)
 
-	start = split_index + index
-	m = period_num
-	total = len(df)
+    name = '%s-%d.html' % (csv_file, index)
+    split_index = int(len(df)*validate_split)
 
-	if start + m*2 >= total:
-	    print "invalid parameters"
-	    sys.exit()
+    start = trim+split_index+index
+    end = start + 100
+    trace = go.Ohlc(#x=df['DTYYYYMMDD'],
+                    open=df.OPEN[start: end],
+	                high=df.HIGH[start: end],
+	                low=df.LOW[start: end],
+	                close=df.CLOSE[start: end])
 
-	high = max(df.HIGH[start:start+m])
-	low = min(df.LOW[start:start+m])
-	new_high = max(df.HIGH[start+m:start+2*m])
-	new_low = min(df.LOW[start+m:start+2*m])
 
-	name = "no-trend"
-	if new_high > high and new_low > low:
-	    name = "up-trend"
-	elif new_low < low and new_high < high:
-	    name = "down-trend"
-	else:
-	    pass
+    #x = [i for i range(100)]
+    trace2 = go.Scatter(y=df.CLOSE[start: end])
+    data = [trace, trace2]
 
-	name += '--up:%.4f-down:%.4f-swing:%0.4f.html' % (trends[0], trends[1], trends[2])
-
-	trace = go.Ohlc(#x=df['DTYYYYMMDD'],
-	                open=df.OPEN[start: start+2*m],
-	                high=df.HIGH[start: start+2*m],
-	                low=df.LOW[start: start+2*m],
-	                close=df.CLOSE[start: start+2*m])
-
-	data = [trace]
-	    #py.iplot(data, filename='simple_candlestick')
-	py.offline.plot(data, filename=name, auto_open=True)
+    py.offline.plot(data, filename=name, auto_open=True)
