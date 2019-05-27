@@ -84,6 +84,12 @@ def train():
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
 
+    df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/finance-charts-apple.csv')
+    closes = df['AAPL.Close'].values[:100]
+    testx = np.reshape(closes, (5, 20))
+    testx = preprocessing.scale(testx, axis=1)
+    print(model.predict(testx))
+    '''
     # list all data in history
     print(history.history.keys())
     # summarize history for accuracy
@@ -102,6 +108,7 @@ def train():
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
     plt.show()
+    '''
 
 train()
 
