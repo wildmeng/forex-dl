@@ -1,15 +1,51 @@
 
 from datetime import datetime
 import backtrader as bt
+import backtrader.indicators as btind
 
-class SmaCross(bt.SignalStrategy):
+class OverUnderMovAv(bt.Indicator):
+    lines = ('overunder',)
+    params = dict(period=20, movav=bt.ind.MovAv.Simple)
+
+    plotinfo = dict(
+        # Add extra margins above and below the 1s and -1s
+        plotymargin=0.15,
+
+        # Plot a reference horizontal line at 1.0 and -1.0
+        plothlines=[1.0, -1.0],
+
+        # Simplify the y scale to 1.0 and -1.0
+        plotyticks=[1.0, -1.0])
+
+    # Plot the line "overunder" (the only one) with dash style
+    # ls stands for linestyle and is directly passed to matplotlib
+    plotlines = dict(overunder=dict(ls='--'))
+
+    def _plotlabel(self):
+        # This method returns a list of labels that will be displayed
+        # behind the name of the indicator on the plot
+
+        # The period must always be there
+        plabels = [self.p.period]
+
+        # Put only the moving average if it's not the default one
+        plabels += [self.p.movav] * self.p.notdefault('movav')
+
+        return plabels
+
     def __init__(self):
-        sma1, sma2 = bt.ind.SMA(period=10), bt.ind.SMA(period=30)
-        crossover = bt.ind.CrossOver(sma1, sma2)
-        self.signal_add(bt.SIGNAL_LONG, crossover)
+        movav = self.p.movav(self.data, period=self.p.period)
+        self.l.overunder = bt.Cmp(self.data, movav)
+
+class MySignal(bt.Indicator):
+    lines = ('signal',)
+    params = (('period', 30),)
+
+    def __init__(self):
+        self.lines.signal = OverUnderMovAv(period=self.p.period)
 
 cerebro = bt.Cerebro()
-cerebro.addstrategy(SmaCross)
+cerebro.add_signal(bt.SIGNAL_LONGSHORT, MySignal, period=60)
 
 data0 = bt.feeds.YahooFinanceData(dataname='MSFT', fromdate=datetime(2011, 1, 1),
                                   todate=datetime(2012, 12, 31))
