@@ -1,64 +1,15 @@
-import numpy as np
-
-from datetime import datetime
+import datetime  # For datetime objects
 import os.path  # To manage paths
 import sys  # To find out the script name (in argv[0])
 
+# Import the backtrader platform
 import backtrader as bt
-import backtrader.indicators as btind
-from sklearn import preprocessing
-from test import get_train_model
-
-class DLTrend(bt.Indicator):
-    lines = ('dltrend',)
-    params = dict(period=20, movav=bt.ind.MovAv.Simple)
-
-    plotinfo = dict(
-        # Add extra margins above and below the 1s and -1s
-        plotymargin=0.15,
-
-        # Plot a reference horizontal line at 1.0 and -1.0
-        plothlines=[1.0, -1.0],
-
-        # Simplify the y scale to 1.0 and -1.0
-        plotyticks=[1.0, -1.0])
-
-    # Plot the line "overunder" (the only one) with dash style
-    # ls stands for linestyle and is directly passed to matplotlib
-    plotlines = dict(dltrend=dict(ls='--'))
-
-    def __init__(self):
-        self.addminperiod(self.params.period)
-        self.model = get_train_model(self.params.period)
-
-    def next(self):
-
-        datax = self.data.get(size=self.p.period)
-
-        x = np.array(datax)
-        x =np.reshape(x, (1,self.p.period))
-        x = preprocessing.scale(x, axis=1)
-        p = self.model.predict(x)
-
-        trend = p[0].tolist()
-        maxtrend = max(trend)
-        itrend = trend.index(maxtrend)
-        if maxtrend < 0.9:
-            self.lines.dltrend[0] = 0
-            return
-
-        if itrend == 0 or itrend == 2:
-            self.lines.dltrend[0] =  1
-        elif itrend == 1 or itrend == 3:
-            self.lines.dltrend[0] =  -1
-        else:
-            self.lines.dltrend[0] = 0
 
 
 # Create a Stratey
 class TestStrategy(bt.Strategy):
     params = (
-        ('period', 15),
+        ('maperiod', 15),
     )
 
     def log(self, txt, dt=None):
@@ -76,7 +27,18 @@ class TestStrategy(bt.Strategy):
         self.buycomm = None
 
         # Add a MovingAverageSimple indicator
-        self.trend = DLTrend(self.p.period)
+        self.sma = bt.indicators.SimpleMovingAverage(
+            self.datas[0], period=self.params.maperiod)
+
+        # Indicators for the plotting show
+        bt.indicators.ExponentialMovingAverage(self.datas[0], period=25)
+        bt.indicators.WeightedMovingAverage(self.datas[0], period=25,
+                                            subplot=True)
+        bt.indicators.StochasticSlow(self.datas[0])
+        bt.indicators.MACDHisto(self.datas[0])
+        rsi = bt.indicators.RSI(self.datas[0])
+        bt.indicators.SmoothedMovingAverage(rsi, period=10)
+        bt.indicators.ATR(self.datas[0], plot=False)
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -128,7 +90,7 @@ class TestStrategy(bt.Strategy):
         if not self.position:
 
             # Not yet ... we MIGHT BUY if ...
-            if self.trend[0] > 0:
+            if self.dataclose[0] > self.sma[0]:
 
                 # BUY, BUY, BUY!!! (with all possible default parameters)
                 self.log('BUY CREATE, %.2f' % self.dataclose[0])
@@ -138,7 +100,7 @@ class TestStrategy(bt.Strategy):
 
         else:
 
-            if self.trend[0] < 0:
+            if self.dataclose[0] < self.sma[0]:
                 # SELL, SELL, SELL!!! (with all possible default parameters)
                 self.log('SELL CREATE, %.2f' % self.dataclose[0])
 
@@ -151,7 +113,7 @@ if __name__ == '__main__':
     cerebro = bt.Cerebro()
 
     # Add a strategy
-    cerebro.addstrategy(TestStrategy, period = 20)
+    cerebro.addstrategy(TestStrategy)
 
     data0 = bt.feeds.YahooFinanceData(dataname='MSFT', fromdate=datetime(2011, 1, 1),
                                   todate=datetime(2012, 12, 31))

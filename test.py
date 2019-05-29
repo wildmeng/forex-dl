@@ -9,9 +9,8 @@ from keras.layers import Dense, Dropout
 from keras.optimizers import RMSprop, Adam
 from sklearn import preprocessing
 
-def gendata(validate_split=0.7):
+def gendata(num=10, validate_split=0.7):
 
-    num = 20
     np.random.seed(111)
     x = np.arange(1, num+1)
 
@@ -50,12 +49,12 @@ def gendata(validate_split=0.7):
     return (x[0], y[0]), (x[1], y[1])
 
 
-def train():
+def get_train_model(num=10):
     batch_size = 64
     num_classes = 2
     epochs = 10
 
-    (x_train, y_train), (x_test, y_test) = gendata()
+    (x_train, y_train), (x_test, y_test) = gendata(num)
     input_cols = x_train.shape[1]
     num_classes = y_train.shape[1]
 
@@ -83,13 +82,15 @@ def train():
     score = model.evaluate(x_test, y_test, verbose=1)
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
+    return model
 
+    '''
     df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/finance-charts-apple.csv')
-    closes = df['AAPL.Close'].values[:100]
+    closes = df['AAPL.Close'].values[100:200]
     testx = np.reshape(closes, (5, 20))
     testx = preprocessing.scale(testx, axis=1)
     print(model.predict(testx))
-    '''
+
     # list all data in history
     print(history.history.keys())
     # summarize history for accuracy
@@ -110,5 +111,5 @@ def train():
     plt.show()
     '''
 
-train()
+# train()
 
