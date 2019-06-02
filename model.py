@@ -8,53 +8,15 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.optimizers import RMSprop, Adam
 from sklearn import preprocessing
+from train_data import get_train_data
 
-def gendata(num=10, validate_split=0.7):
-
-    np.random.seed(111)
-    x = np.arange(1, num+1)
-
-    datax = []
-    datay = []
-
-    for i in range(1000):
-        rand = np.random.random()
-        y = pow(1.08, x) + np.sin(3.14*rand*x+2*3.14*rand)*rand/2
-        datax.append(y)
-        datay.append([1.0, 0, 0, 0, 0])
-        rand = np.random.random()
-        y = -pow(1.08, x) + np.sin(3.14*rand*x+2*3.14*rand)*rand/2
-        datax.append(y)
-        datay.append([0, 1.0, 0, 0, 0])
-
-        y = np.log(x) + np.sin(3.14 * rand * x + 2 * 3.14 * rand) * rand / 2
-        datax.append(y)
-        datay.append([0, 0, 1.0, 0, 0])
-        rand = np.random.random()
-        y = -np.log(x) + np.sin(3.14 * rand * x + 2 * 3.14 * rand) * rand / 2
-        datax.append(y)
-        datay.append([0, 0, 0, 1.0, 0])
-
-        y = np.sin(3.14 * rand * x + 2 * 3.14 * rand) * rand / 2
-        datax.append(y)
-        datay.append([0, 0, 0, 0,1.0])
-
-    assert len(datax) == len(datay)
-
-    datax = preprocessing.scale(datax, axis=1)
-
-    split_index = int(len(datax)*validate_split)
-    x = np.split(datax, [split_index])
-    y = np.split(datay, [split_index])
-    return (x[0], y[0]), (x[1], y[1])
-
-
-def get_train_model(num=10):
+def get_model(num=10):
     batch_size = 64
     num_classes = 2
     epochs = 10
 
-    (x_train, y_train), (x_test, y_test) = gendata(num)
+    (x_train, y_train), (x_test, y_test) = get_train_data(num, 0.8)
+    print(len(x_train), len(x_test))
     input_cols = x_train.shape[1]
     num_classes = y_train.shape[1]
 
@@ -82,18 +44,8 @@ def get_train_model(num=10):
     score = model.evaluate(x_test, y_test, verbose=1)
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
-    return model
 
     '''
-    df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/finance-charts-apple.csv')
-    closes = df['AAPL.Close'].values[100:200]
-    testx = np.reshape(closes, (5, 20))
-    testx = preprocessing.scale(testx, axis=1)
-    print(model.predict(testx))
-
-    # list all data in history
-    print(history.history.keys())
-    # summarize history for accuracy
     plt.plot(history.history['acc'])
     plt.plot(history.history['val_acc'])
     plt.title('model accuracy')
@@ -110,6 +62,7 @@ def get_train_model(num=10):
     plt.legend(['train', 'test'], loc='upper left')
     plt.show()
     '''
+    return model
 
-# train()
-
+if __name__ == '__main__':
+    get_model(20)

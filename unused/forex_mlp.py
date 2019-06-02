@@ -4,17 +4,12 @@ from __future__ import print_function
 
 import sys
 import os
-import pandas as pd
 
-import keras
-from keras.datasets import mnist
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
-from keras.optimizers import RMSprop, Adam
 from keras.models import model_from_json
 
-import gendata as data
-
+from unused import gendata as data
 
 model_file_name = "mlp_model.json"
 model_weights_file_name = "mlp_model.h5"
