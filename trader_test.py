@@ -1,6 +1,6 @@
 from datetime import datetime
 import backtrader as bt
-from mytrategy import MyStrategy
+from sell_strategy import MyStrategy
 
 if __name__ == '__main__':
     # Create a cerebro entity
@@ -13,7 +13,7 @@ if __name__ == '__main__':
     # BT: BTC-USD
     # SP500: ^GSPC
     data0 = bt.feeds.YahooFinanceData(dataname='BTC-USD', fromdate=datetime(2013, 1, 1),
-                                      todate=datetime(2019, 5, 28), decimals=5)
+                                      todate=datetime(2015, 5, 28), decimals=5)
     cerebro.adddata(data0)
 
     # Set our desired cash start

@@ -98,45 +98,24 @@ class MyStrategy(bt.Strategy):
 
         # try to open long
         if self.trend.l.down2up > thres or self.trend.l.up > thres:
-            if self.shorttrend.l.down < (1-thres):
-            #if self.shorttrend.l.up > thres or self.shorttrend.l.down2up > thres:
-                # if self.longtrend.l.up2down < 1-thres and self.longtrend.l.down < (1-thres):
+            if self.shorttrend.l.down < (1-thres) and self.shorttrend.l.up2down < (1-thres):
                 if self.longtrend.l.down < (1 - thres):
                     self.log('Long, %.2f' % (self.dataclose[0]))
                     # Keep track of the created order to avoid a 2nd order
                     self.order = self.buy()
                     self.isbuy = True
                     return
-        '''
-        # we MIGHT Sell if ...
-        if self.trend.l.up2down[0] > thres and self.shorttrend.l.up2down[0] > thres:
-            self.log('Short, %.2f' % (self.dataclose[0]))
-            # Keep track of the created order to avoid a 2nd order
-            self.order = self.sell()
-            self.isbuy = False
-            return
-        '''
 
     def close_order(self):
         thres = 0.8
         if self.isbuy:
             if self.trend.l.up2down > thres or self.trend.l.down > thres or self.trend.l.none > thres:
                 if self.shorttrend.l.up < 0.5:
-                    # SELL, SELL, SELL!!! (with all possible default parameters)
                     self.log('Close Long order, %.2f' % self.dataclose[0])
 
                     # Keep track of the created order to avoid a 2nd order
                     self.order = self.close()
-        '''
-        else:
-            if self.trend.l.up2down[0] < 0.5:
-                if self.trend.l.down[0] < 0.5:
-                    # SELL, SELL, SELL!!! (with all possible default parameters)
-                        self.log('CLose Short order, %.2f' % self.dataclose[0])
 
-                        # Keep track of the created order to avoid a 2nd order
-                        self.order = self.close()
-        '''
     def next(self):
         # Simply log the closing price of the series from the reference
         # self.log('Close, %.2f' % self.dataclose[0])
