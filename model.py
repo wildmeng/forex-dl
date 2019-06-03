@@ -65,4 +65,4 @@ def get_model(num=10):
     return model
 
 if __name__ == '__main__':
-    get_model(20)
+    get_model(10)

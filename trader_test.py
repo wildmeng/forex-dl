@@ -1,19 +1,30 @@
 from datetime import datetime
 import backtrader as bt
-from sell_strategy import MyStrategy
+from buy_strategy import MyStrategy
+
+class SmaCross(bt.SignalStrategy):
+    def __init__(self):
+        sma1, sma2 = bt.ind.SMA(period=1), bt.ind.SMA(period=60)
+        crossover = bt.ind.CrossOver(sma1, sma2)
+        self.signal_add(bt.SIGNAL_LONG, crossover)
+
+
+
 
 if __name__ == '__main__':
     # Create a cerebro entity
     cerebro = bt.Cerebro()
 
     # Add a strategy
-    cerebro.addstrategy(MyStrategy, period=20)
+    #cerebro.addstrategy(MyStrategy, period=20)
+
+    cerebro.addstrategy(SmaCross)
 
     # sh: 000001.SS
     # BT: BTC-USD
     # SP500: ^GSPC
-    data0 = bt.feeds.YahooFinanceData(dataname='BTC-USD', fromdate=datetime(2013, 1, 1),
-                                      todate=datetime(2015, 5, 28), decimals=5)
+    data0 = bt.feeds.YahooFinanceData(dataname='000001.SS', fromdate=datetime(2013, 1, 1),
+                                      todate=datetime(2019, 5, 28), decimals=5)
     cerebro.adddata(data0)
 
     # Set our desired cash start
