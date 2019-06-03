@@ -9,22 +9,20 @@ class SmaCross(bt.SignalStrategy):
         self.signal_add(bt.SIGNAL_LONG, crossover)
 
 
-
-
 if __name__ == '__main__':
     # Create a cerebro entity
     cerebro = bt.Cerebro()
 
     # Add a strategy
-    #cerebro.addstrategy(MyStrategy, period=20)
+    cerebro.addstrategy(MyStrategy, period=100)
 
-    cerebro.addstrategy(SmaCross)
+    #cerebro.addstrategy(SmaCross)
 
     # sh: 000001.SS
     # BT: BTC-USD
     # SP500: ^GSPC
-    data0 = bt.feeds.YahooFinanceData(dataname='000001.SS', fromdate=datetime(2013, 1, 1),
-                                      todate=datetime(2019, 5, 28), decimals=5)
+    data0 = bt.feeds.YahooFinanceData(dataname='^GSPC', fromdate=datetime(2013, 1, 1),
+                                      todate=datetime(2019, 6, 1), decimals=5)
     cerebro.adddata(data0)
 
     # Set our desired cash start
