@@ -102,6 +102,9 @@ def get_train_data(period = 20, split_at = 0.8):
 
         [[up, up2, up3], [down, down2, down3], 0.8],
         [[down, down2, down3], [up, up2, up3], 0.8],
+
+        [[notrend], [[up, up2, up3]]],
+        [[notrend], [[down, down2, down3]]],
     ]
 
     x, y = _gen_data(period, trends)
