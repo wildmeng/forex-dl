@@ -52,7 +52,7 @@ class MyStrategy(bt.Strategy):
         self.buycomm = None
         self.isbuy = True
         self.trend = TrendIndictor(period=self.p.period)
-        self.longtrend = TrendIndictor(period=self.p.period*2)
+        self.longtrend = TrendIndictor(self.data1, period=self.p.period)
         self.shorttrend = TrendIndictor(period=self.p.period//2)
 
     def notify_order(self, order):

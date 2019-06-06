@@ -3,33 +3,41 @@ import matplotlib.pyplot as plt
 from sklearn import preprocessing
 from sklearn.utils import shuffle
 
-def up_break(num, p):
+def up(num):
+    p = 1.1
     x = np.arange(0, num)
     y = pow(p, x) - 1.0
 
-    y[num-1] - yn
     return y
 
-def up(num, p):
-    x = np.arange(0, num)
-    y = pow(p, x)
-    y1 = y - 1.0
-
-    return y1
-
-def down(num, p):
+def down(num):
+    p = 1.1
     x = np.arange(0, num)
     return -pow(p, x) + 1.0
 
-def notrend(num, p):
+def up2(num):
+    p = 1/3
+    x = np.arange(0, num)
+    y = x*p
+
+    return y
+
+def down2(num):
+    p = 1/3
+    x = np.arange(0, num)
+    y = -x*p
+
+    return y
+
+def notrend(num):
     return np.array([0.0]*num)
 
-def merge_trend(num, f, p, ratio):
-    y1 = f[0](num, p[0])
+def merge_trend(num, f, ratio):
+    y1 = f[0](num)
     if len(f) == 1:
         return y1
 
-    y2 = f[1](num, p[1])
+    y2 = f[1](num)
 
     start = int(num*ratio)
     y2 += (y1[start-1])
@@ -63,8 +71,8 @@ def add_wave_on_trend(trend_base, trend_type, amps=10, cycles=10, shifts=10):
                 wave = a*np.sin(T*x + s) + a
                 output_x.append(trend_base+wave)
                 output_y.append(trend_type)
-                #plt.plot(x,trend_base+wave,'--bo')
-                #plt.show()
+                plt.plot(x,trend_base+wave,'--bo')
+                plt.show()
 
     return output_x, output_y
 
@@ -85,15 +93,15 @@ def _gen_data(period, configs):
 
 def get_train_data(period = 20, split_at = 0.8):
     trends = [
-        [[up], [1.1],0.0],
-        [[down], [1.1],0.0],
-        [[up,down], [1.1, 1.1], 0.6],
-        [[down,up], [1.1, 1.1], 0.6],
-        [[notrend], [0.0], 0.0],
-        [[up,notrend], [1.1, 0.0], 0.6],
-        [[down,notrend], [1.1, 0.0], 0.6],
-        [[notrend,up], [1.1, 0.0], 0.6],
-        [[notrend,down], [1.1, 0.0], 0.6]
+        [[up, up2, up3]],
+        [[down, down2, down3]],
+        [[notrend]],
+
+        [[down, down2, down3], [notrend], 0.8],
+        [[up, up2, up3], [notrend], 0.8],
+
+        [[up, up2, up3], [down, down2, down3], 0.8],
+        [[down, down2, down3], [up, up2, up3], 0.8],
     ]
 
     x, y = _gen_data(period, trends)
