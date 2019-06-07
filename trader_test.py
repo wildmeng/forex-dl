@@ -14,16 +14,22 @@ if __name__ == '__main__':
     cerebro = bt.Cerebro()
 
     # Add a strategy
-    cerebro.addstrategy(MyStrategy, period=100)
+    cerebro.addstrategy(MyStrategy, period=20)
 
     #cerebro.addstrategy(SmaCross)
 
     # sh: 000001.SS
     # BT: BTC-USD
     # SP500: ^GSPC
-    data0 = bt.feeds.YahooFinanceData(dataname='^GSPC', fromdate=datetime(2013, 1, 1),
+    data0 = bt.feeds.YahooFinanceData(dataname='BTC-USD', fromdate=datetime(2013, 1, 1),
                                       todate=datetime(2019, 6, 1), decimals=5)
     cerebro.adddata(data0)
+
+    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Days,
+                         compression=2)
+
+    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Days,
+                         compression=20)
 
     # Set our desired cash start
     cerebro.broker.setcash(10000.0)

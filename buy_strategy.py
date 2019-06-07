@@ -6,13 +6,14 @@ from sklearn import preprocessing
 from model import get_model
 
 class TrendIndictor(bt.Indicator):
-    lines = ('up','down','up2down','down2up', 'none')
-    params = dict(period=30,)
-    plotlines = dict(none=dict(ls='--'))
+    lines = ('up','down', 'flat','down2flat', 'up2flat',
+             'flat2up', 'flat2down',  'up2down','down2up')
+    params = dict(period=30, model=None)
+    plotlines = dict(flat=dict(ls='--'))
 
     def __init__(self):
         self.addminperiod(self.params.period)
-        self.model = get_model(self.params.period)
+        #self.model = get_model(self.params.period)
 
     def next(self):
 
@@ -21,15 +22,21 @@ class TrendIndictor(bt.Indicator):
         x = np.array(datax)
         x =np.reshape(x, (1,self.p.period))
         x = preprocessing.scale(x, axis=1)
-        p = self.model.predict(x)
+        p = self.p.model.predict(x)
 
         trend = p[0].tolist()
 
         self.lines.up[0] = trend[0]
         self.lines.down[0] = trend[1]
-        self.lines.up2down[0] = trend[2]
-        self.lines.down2up[0] = trend[3]
-        self.lines.none[0] = trend[4]
+        self.lines.flat[0] = trend[2]
+
+        self.lines.down2flat[0] = trend[3]
+        self.lines.up2flat[0] = trend[4]
+        self.lines.flat2up[0] = trend[5]
+        self.lines.flat2down[0] = trend[6]
+
+        self.lines.up2down[0] = trend[7]
+        self.lines.down2up[0] = trend[8]
 
 # Create a Stratey
 class MyStrategy(bt.Strategy):
@@ -51,9 +58,10 @@ class MyStrategy(bt.Strategy):
         self.buyprice = None
         self.buycomm = None
         self.isbuy = True
-        self.trend = TrendIndictor(period=self.p.period)
-        self.longtrend = TrendIndictor(self.data1, period=self.p.period)
-        self.shorttrend = TrendIndictor(period=self.p.period//2)
+        self.model = get_model(self.params.period)
+        self.short = TrendIndictor(period=self.p.period, model=self.model)
+        self.mid = TrendIndictor(self.data1, period=self.p.period, model=self.model)
+        self.long = TrendIndictor(self.data2, period=self.p.period, model=self.model)
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -89,32 +97,37 @@ class MyStrategy(bt.Strategy):
         self.log('OPERATION PROFIT, GROSS %.2f, NET %.2f' %
                  (trade.pnl, trade.pnlcomm))
 
+    def get_up_trend(self, trend):
+        up_trend = trend.l.down2up + trend.l.up + trend.l.flat2up
+        return up_trend
+
+    def get_down_trend(self, trend):
+        down_trend = trend.l.up2down + trend.l.down + trend.l.flat2down
+        return down_trend
+
     def open_order(self):
         # we MIGHT BUY if ...
         if self.position:
             return
 
         thres = 0.8
-
         # try to open long
-        if self.trend.l.down2up > thres or self.trend.l.up > thres:
-            if self.shorttrend.l.down < (1-thres) and self.shorttrend.l.up2down < (1-thres):
-                if self.longtrend.l.down < (1 - thres):
-                    self.log('Long, %.2f' % (self.dataclose[0]))
-                    # Keep track of the created order to avoid a 2nd order
-                    self.order = self.buy()
-                    self.isbuy = True
-                    return
+        if self.get_up_trend(self.short) > thres and self.get_down_trend(self.mid) < (1-thres):
+            self.log('Long, %.2f' % (self.dataclose[0]))
+            # Keep track of the created order to avoid a 2nd order
+            self.order = self.buy()
+            self.isbuy = True
+            return
 
     def close_order(self):
         thres = 0.8
         if self.isbuy:
-            if self.trend.l.up2down > thres or self.trend.l.down > thres or self.trend.l.none > thres:
-                if self.shorttrend.l.up < 0.5:
-                    self.log('Close Long order, %.2f' % self.dataclose[0])
+            #if self.get_down_trend(self.long) > thres:
+            if self.get_down_trend(self.short) > thres:
+                self.log('Close Long order, %.2f' % self.dataclose[0])
 
-                    # Keep track of the created order to avoid a 2nd order
-                    self.order = self.close()
+                # Keep track of the created order to avoid a 2nd order
+                self.order = self.close()
 
     def next(self):
         # Simply log the closing price of the series from the reference

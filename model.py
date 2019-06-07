@@ -9,12 +9,12 @@ from keras.layers import Dense, Dropout
 from keras.optimizers import RMSprop, Adam
 from sklearn import preprocessing
 # from train_data import get_train_data
-from a import get_train_data
+from train_data import get_train_data
 
 def get_model(num=10):
     batch_size = 64
     num_classes = 2
-    epochs = 14
+    epochs = 20
 
     (x_train, y_train), (x_test, y_test) = get_train_data(num, 0.8)
     print(len(x_train), len(x_test))
@@ -46,7 +46,7 @@ def get_model(num=10):
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
 
-
+    '''
     plt.plot(history.history['acc'])
     plt.plot(history.history['val_acc'])
     plt.title('model accuracy')
@@ -54,7 +54,7 @@ def get_model(num=10):
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
     plt.show()
-
+    '''
     return model
 
 if __name__ == '__main__':
