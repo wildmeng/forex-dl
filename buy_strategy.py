@@ -7,7 +7,7 @@ from model import get_model
 
 class TrendIndictor(bt.Indicator):
     lines = ('up','down', 'flat','down2flat', 'up2flat',
-             'flat2up', 'flat2down',  'up2down','down2up')
+             'flat2up', 'flat2down',  'up2down','down2up','trend')
     params = dict(period=30, model=None)
     plotlines = dict(flat=dict(ls='--'))
 
@@ -20,7 +20,7 @@ class TrendIndictor(bt.Indicator):
         datax = self.data.get(size=self.p.period)
 
         x = np.array(datax)
-        x =np.reshape(x, (1,self.p.period))
+        x = np.reshape(x, (1,self.p.period))
         x = preprocessing.scale(x, axis=1)
         p = self.p.model.predict(x)
 
@@ -37,6 +37,8 @@ class TrendIndictor(bt.Indicator):
 
         self.lines.up2down[0] = trend[7]
         self.lines.down2up[0] = trend[8]
+
+        self.lines.trend[0] = np.argmax(p[0])
 
 # Create a Stratey
 class MyStrategy(bt.Strategy):
@@ -58,10 +60,9 @@ class MyStrategy(bt.Strategy):
         self.buyprice = None
         self.buycomm = None
         self.isbuy = True
-        self.model = get_model(self.params.period)
-        self.short = TrendIndictor(period=self.p.period, model=self.model)
-        self.mid = TrendIndictor(self.data1, period=self.p.period, model=self.model)
-        self.long = TrendIndictor(self.data2, period=self.p.period, model=self.model)
+        self.trend = TrendIndictor(period=self.p.period, model=get_model(self.params.period))
+        self.trend2 = TrendIndictor(period=2*self.p.period, model=get_model(self.params.period*2))
+        self.Q = np.load('Q.npy')
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -105,21 +106,60 @@ class MyStrategy(bt.Strategy):
         down_trend = trend.l.up2down + trend.l.down + trend.l.flat2down
         return down_trend
 
+    def get_action(self):
+        pos = 0
+
+        if self.position:
+            if self.isbuy:
+                pos = 2
+            else:
+                pos = 1
+        else:
+            pos = 0
+
+        trend1 = self.trend.l.trend[0]
+        trend2 = self.trend2.l.trend[0]
+
+        action = np.argmax(self.Q[pos, int(trend1), int(trend2)])
+        return action
+
     def open_order(self):
         # we MIGHT BUY if ...
         if self.position:
             return
 
+        action = self.get_action()
+        if action == 0:
+            self.isbuy = True
+            self.order = self.buy()
+        elif action == 1:
+            self.isbuy = False
+            self.order = self.sell()
+        else:
+            pass
+
+        '''
         thres = 0.8
         # try to open long
         if self.get_up_trend(self.short) > thres and self.get_down_trend(self.mid) < (1-thres):
             self.log('Long, %.2f' % (self.dataclose[0]))
             # Keep track of the created order to avoid a 2nd order
-            self.order = self.buy()
-            self.isbuy = True
+
+
             return
+        '''
 
     def close_order(self):
+        action = self.get_action()
+        if self.isbuy:
+            if action == 1:
+                self.order = self.close()
+        else:
+            if action == 0:
+                self.order = self.close()
+
+        '''
+
         thres = 0.8
         if self.isbuy:
             #if self.get_down_trend(self.long) > thres:
@@ -128,14 +168,16 @@ class MyStrategy(bt.Strategy):
 
                 # Keep track of the created order to avoid a 2nd order
                 self.order = self.close()
+        '''
 
     def next(self):
         # Simply log the closing price of the series from the reference
-        # self.log('Close, %.2f' % self.dataclose[0])
+        self.log('Close, %.2f' % self.dataclose[0])
 
         # Check if an order is pending ... if yes, we cannot send a 2nd one
         if self.order:
             return
+
 
         # Check if we are in the market
         if not self.position:

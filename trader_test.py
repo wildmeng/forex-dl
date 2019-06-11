@@ -14,22 +14,44 @@ if __name__ == '__main__':
     cerebro = bt.Cerebro()
 
     # Add a strategy
-    cerebro.addstrategy(MyStrategy, period=20)
+    #cerebro.addstrategy(MyStrategy, period=40)
 
-    #cerebro.addstrategy(SmaCross)
+    cerebro.addstrategy(SmaCross)
 
     # sh: 000001.SS
     # BT: BTC-USD
     # SP500: ^GSPC
-    data0 = bt.feeds.YahooFinanceData(dataname='BTC-USD', fromdate=datetime(2013, 1, 1),
-                                      todate=datetime(2019, 6, 1), decimals=5)
+    #data0 = bt.feeds.YahooFinanceData(dataname='BTC-USD', fromdate=datetime(2018, 1, 1),
+    #                                  todate=datetime(2019, 6, 1), decimals=5)
+
+    data0 = bt.feeds.GenericCSVData(
+    dataname='data/train/short-1000.csv',
+
+    #fromdate=datetime(2000, 1, 1),
+    #todate=datetime(2000, 12, 31),
+
+    nullvalue=0.0,
+
+    dtformat=('%Y-%m-%dT%H:%M:%S.000Z'),
+    #tmformat=('%H:%M:%S'),
+
+    datetime=1,
+    time=-1,
+    high=3,
+    low=4,
+    open=2,
+    close=5,
+    volume=-1,
+    openinterest=-1
+    )
+
     cerebro.adddata(data0)
 
-    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Days,
-                         compression=2)
+    #cerebro.resampledata(data0, timeframe=bt.TimeFrame.Days,
+    #                      compression=2)
 
-    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Days,
-                         compression=20)
+    #cerebro.resampledata(data0, timeframe=bt.TimeFrame.Days,
+    #                     compression=20)
 
     # Set our desired cash start
     cerebro.broker.setcash(10000.0)
