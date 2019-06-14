@@ -14,7 +14,7 @@ if __name__ == '__main__':
     cerebro = bt.Cerebro()
 
     # Add a strategy
-    #cerebro.addstrategy(MyStrategy, period=40)
+    #cerebro.addstrategy(MyStrategy, period=20)
 
     cerebro.addstrategy(SmaCross)
 
@@ -25,10 +25,10 @@ if __name__ == '__main__':
     #                                  todate=datetime(2019, 6, 1), decimals=5)
 
     data0 = bt.feeds.GenericCSVData(
-    dataname='data/train/short-1000.csv',
+    dataname='/Users/mxiaofeng/PycharmProjects/forex-dl/data/XBTUSD_5m_70000_train.csv',
 
-    #fromdate=datetime(2000, 1, 1),
-    #todate=datetime(2000, 12, 31),
+    fromdate=datetime(2017, 12, 10),
+    todate=datetime(2017, 12, 30),
 
     nullvalue=0.0,
 
@@ -42,19 +42,21 @@ if __name__ == '__main__':
     open=2,
     close=5,
     volume=-1,
-    openinterest=-1
+    openinterest=-1,
+    timeframe=bt.TimeFrame.Minutes,
+    compression = 5
     )
 
+    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes,
+                          compression=2)
     cerebro.adddata(data0)
 
-    #cerebro.resampledata(data0, timeframe=bt.TimeFrame.Days,
-    #                      compression=2)
 
     #cerebro.resampledata(data0, timeframe=bt.TimeFrame.Days,
     #                     compression=20)
 
     # Set our desired cash start
-    cerebro.broker.setcash(10000.0)
+    cerebro.broker.setcash(1000000.0)
 
     # Add a FixedSize sizer according to the stake
     #cerebro.addsizer(bt.sizers.FixedSize, stake=2)

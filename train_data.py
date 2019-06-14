@@ -116,16 +116,18 @@ def get_train_data(period = 20, split_at = 0.8):
     trends = [
         [[up3, up2, up]],
         [[down3, down2, down]],
-        [[notrend]],
-
-        [[down2, down, down3], [notrend], 0.8],
-        [[up, up2, up3], [notrend], 0.8],
-        [[notrend], [up, up2, up3], 0.7],
-        [[notrend], [down, down2, down3], 0.8],
-
-        [[up, up2, up3], [down, down2, down3], 0.8],
-        [[down, down2, down3], [up, up2, up3], 0.8],
+        [[notrend]]
     ]
+
+    '''
+    [[down2, down, down3], [notrend], 0.8],
+    [[up, up2, up3], [notrend], 0.8],
+    [[notrend], [up, up2, up3], 0.7],
+    [[notrend], [down, down2, down3], 0.8],
+
+    [[up, up2, up3], [down, down2, down3], 0.8],
+    [[down, down2, down3], [up, up2, up3], 0.8],
+    '''
 
     x, y = _gen_data(period, trends)
 
