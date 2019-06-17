@@ -2,21 +2,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import preprocessing
 from sklearn.utils import shuffle
+import math
 
-def up(num, shift):
+def up1(num, shift):
     p = 0.5
     x = np.linspace(0.0, 4*np.pi, num=num)
     y = x*p + np.sin(x+shift)
 
     return y
 
-def down(num, shift):
+def up2(num, shift):
+    p = 1.1
+    x = np.linspace(0.0, 4*np.pi, num=num)
+    y = np.power(p,x) + np.sin(x+shift)
+    return y
+
+
+def down1(num, shift):
     p = -0.5
     x = np.linspace(0.0, 4*np.pi, num=num)
     y = x*p + np.sin(x+shift)
 
     return y
 
+def down2(num, shift):
+    p = 1.1
+    x = np.linspace(0.0, 4*np.pi, num=num)
+    y = -np.power(p,x) + np.sin(x+shift)
+    return y
 
 def flat1(num, shift):
     x = np.linspace(0.0, 4*np.pi, num=num)
@@ -36,24 +49,37 @@ def flat3(num, shift):
 
     return y
 
+def flat4(num, shift):
+    xlen = 7*np.pi
+    def f1(x):
+        return (np.power(1.03, x)) * np.sin(x)
+
+    a = math.pow(1.03, xlen/2)
+
+    def f2(x):
+        return (np.power(1.03, -(x - xlen/2))) * np.sin(x) * a
+
+    x1 = np.linspace(0.0, 7*np.pi, num=num)
+    y = np.piecewise(x1, [x1 < xlen / 2, x1 >= xlen/2], [f1, f2])
+    return y
+
 def get_train_data(period = 20, split_at = 0.8):
     trends = [
-        up,
-        down,
-        flat1,
-        flat2,
-        flat3
+        [up1, up2],
+        [down1, down2],
+        [flat1,flat2,flat3,flat4]
     ]
 
     x = []
     y = []
     vects = np.eye(len(trends))
     for i, t in enumerate(trends):
-        shifts = np.linspace(0.0, np.pi, 10)
-        for shift in shifts:
-            result = t(period, shift)
-            x.append(result)
-            y.append(vects[i].tolist())
+        for ts in t:
+            shifts = np.linspace(0.0, np.pi, 10)
+            for shift in shifts:
+                result = ts(period, shift)
+                x.append(result)
+                y.append(vects[i].tolist())
 
     assert(len(x) == len(y))
     print("total training set:",len(x))
