@@ -15,20 +15,19 @@ import plotly.graph_objs as go
 from plotly.offline import plot, iplot
 
 def get_model(num=10):
-    batch_size = 64
+    batch_size = 32
     num_classes = 2
-    epochs = 20
+    epochs = 40
 
-    (x_train, y_train), (x_test, y_test) = get_train_data(num, 0.8)
-    print(len(x_train), len(x_test))
+    x_train, y_train = get_train_data(num, 0.8)
     input_cols = x_train.shape[1]
     num_classes = y_train.shape[1]
 
     model = Sequential()
-    model.add(Dense(512, activation='relu', input_shape=(input_cols,)))
-    model.add(Dropout(0.2))
-    model.add(Dense(512, activation='relu'))
-    model.add(Dropout(0.2))
+    model.add(Dense(256, activation='relu', input_shape=(input_cols,)))
+    #model.add(Dropout(0.2))
+    model.add(Dense(128, activation='relu'))
+    #model.add(Dropout(0.2))
     model.add(Dense(num_classes, activation='softmax'))
 
     # model.summary()
@@ -42,22 +41,18 @@ def get_model(num=10):
     history = model.fit(x_train, y_train,
                         batch_size=batch_size,
                         epochs=epochs,
-                        verbose=0,
-                        validation_data=(x_test, y_test), shuffle=True)
+                        verbose=1, shuffle=True)
 
-    score = model.evaluate(x_test, y_test, verbose=1)
-    print('Test loss:', score[0])
-    print('Test accuracy:', score[1])
+    #score = model.evaluate(x_test, y_test, verbose=1)
 
-    '''
-    plt.plot(history.history['acc'])
-    plt.plot(history.history['val_acc'])
-    plt.title('model accuracy')
-    plt.ylabel('accuracy')
+    plt.plot(history.history['loss'])
+    #plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
     plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
+    #plt.legend(['train', 'test'], loc='upper left')
     plt.show()
-    '''
+
     return model
 
 
@@ -98,5 +93,11 @@ def showdata(p = 20):
 
 
 if __name__ == '__main__':
-    #
-    showdata(20)
+    model = get_model(20)
+
+    x = np.array([1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,4,3,2,1,0])
+    x = np.reshape(x, (1,20))
+    x = preprocessing.scale(x, axis=1)
+    trend = model.predict(x)
+    print(trend)
+    #showdata(20)
