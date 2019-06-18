@@ -24,9 +24,9 @@ def get_model(num=10):
     num_classes = y_train.shape[1]
 
     model = Sequential()
-    model.add(Dense(64, activation='relu', input_shape=(input_cols,)))
+    model.add(Dense(128, activation='relu', input_shape=(input_cols,)))
     #model.add(Dropout(0.2))
-    model.add(Dense(32, activation='relu'))
+    model.add(Dense(64, activation='relu'))
     #model.add(Dropout(0.2))
     model.add(Dense(num_classes, activation='softmax'))
 
@@ -45,6 +45,7 @@ def get_model(num=10):
 
     #score = model.evaluate(x_test, y_test, verbose=1)
 
+    '''
     plt.plot(history.history['loss'])
     #plt.plot(history.history['val_loss'])
     plt.title('model loss')
@@ -52,6 +53,7 @@ def get_model(num=10):
     plt.xlabel('epoch')
     #plt.legend(['train', 'test'], loc='upper left')
     #plt.show()
+    '''
 
     return model
 
@@ -65,8 +67,6 @@ def showdata(p = 20):
 
     for start in range(1500, 1700):
         end = start + p
-        print(start, end)
-        '''
         trace = go.Ohlc(#x=df['DTYYYYMMDD'],
                         open=df.open[start: end],
                         high=df.high[start: end],
@@ -74,18 +74,20 @@ def showdata(p = 20):
                         close=df.close[start: end])
 
         #x = [i for i range(100)]
-        '''
 
-        x=df.close[start: end]
+        x = df.close[start: end]
         x = np.array(x)
+
+
         x = np.reshape(x, (1,p))
-        x = preprocessing.scale(x, axis=1)
+
+        x = preprocessing.minmax_scale(x, axis=1)
+
+        trace2 = go.Scatter(y=x[0])
+
         trend = model.predict(x)
 
-        x = np.reshape(x, (p,1))
-        print(x)
-        trace2 = go.Scatter(y=x)
-        data = [trace2]  # [trace, trace2]
+        data =  [ trace2]
 
         #print(trend)
         #names = ['up', 'down', 'flat']
@@ -96,7 +98,8 @@ def showdata(p = 20):
 
 
 if __name__ == '__main__':
-    model = get_model(20)
+    model = \
+        (20)
     '''
     x = np.array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,13,12,11,10,9,8])
     x = np.reshape(x, (1,20))

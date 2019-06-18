@@ -20,7 +20,7 @@ class TrendIndictor(bt.Indicator):
 
         x = np.array(datax)
         x = np.reshape(x, (1,self.p.period))
-        x = preprocessing.scale(x, axis=1)
+        x = preprocessing.minmax_scale(x, axis=1)
         p = self.p.model.predict(x)
 
         trend = p[0].tolist()
@@ -49,9 +49,9 @@ class MyStrategy(bt.Strategy):
         self.buyprice = None
         self.buycomm = None
         self.isbuy = True
-        self.trend = TrendIndictor(self.datas[1], period=self.p.period, model=get_model(self.params.period))
-        self.trend2 = TrendIndictor(self.datas[1],period=2*self.p.period, model=get_model(self.params.period*2))
-        self.trend0 = TrendIndictor(self.datas[1],period=self.p.period//2, model=get_model(self.params.period//2))
+        self.trend = TrendIndictor(period=self.p.period, model=get_model(self.params.period))
+        self.trend2 = TrendIndictor(period=2*self.p.period, model=get_model(self.params.period*2))
+        #self.trend0 = TrendIndictor(period=self.p.period//2, model=get_model(self.params.period//2))
 
 
     def notify_order(self, order):
@@ -89,15 +89,21 @@ class MyStrategy(bt.Strategy):
                  (trade.pnl, trade.pnlcomm))
 
 
+    def is_up_dominant(self):
+        return (self.trend.l.up > self.trend.l.down and self.trend.l.up > self.trend.l.flat)
+
+    def is_down_running(self):
+        return (self.trend.l.down > self.trend.l.up and self.trend.l.down > self.trend.l.flat)
+
     def open_order(self):
         # we MIGHT BUY if ...
         if self.position:
             return
 
-        if self.trend.l.up > 0.6 and self.trend2.l.down < 0.3 and self.trend0.l.up > 0.5:
+        if self.is_up_dominant():
             self.isbuy = True
             self.order = self.buy()
-        elif self.trend.l.down > 0.6 and self.trend2.l.up < 0.3 and self.trend0.l.down > 0.5:
+        elif self.is_down_running():
             self.isbuy = False
             self.order = self.sell()
         else:
@@ -115,11 +121,14 @@ class MyStrategy(bt.Strategy):
         '''
 
     def close_order(self):
+        if not self.position:
+            return
+
         if self.isbuy:
-            if self.trend0.l.up < 0.2:
+            if not self.is_up_dominant():
                 self.order = self.close()
         else:
-            if self.trend0.l.down < 0.2:
+            if not self.is_down_running():
                 self.order = self.close()
 
         '''
@@ -136,7 +145,7 @@ class MyStrategy(bt.Strategy):
 
     def next(self):
         # Simply log the closing price of the series from the reference
-        self.log('Close, %.2f' % self.dataclose[0])
+        self.log('Close, %.5f' % self.dataclose[0])
 
         # Check if an order is pending ... if yes, we cannot send a 2nd one
         if self.order:
