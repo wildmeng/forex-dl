@@ -17,7 +17,7 @@ from plotly.offline import plot, iplot
 def get_model(num=10):
     batch_size = 32
     num_classes = 2
-    epochs = 40
+    epochs = 20
 
     x_train, y_train = get_train_data(num, 0.8)
     input_cols = x_train.shape[1]

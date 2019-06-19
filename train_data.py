@@ -63,13 +63,7 @@ def flat4(num, shift, cycles = 2):
     y = np.piecewise(x1, [x1 < xlen / 2, x1 >= xlen/2], [f1, f2])
     return y
 
-def get_train_data(period = 20, split_at = 0.8):
-    trends = [
-        [up1, up2],
-        [down1, down2],
-        [flat1,flat2,flat3,flat4]
-    ]
-
+def add_trends(trends, period):
     x = []
     y = []
     vects = np.eye(len(trends))
@@ -82,24 +76,28 @@ def get_train_data(period = 20, split_at = 0.8):
                     x.append(result)
                     y.append(vects[i].tolist())
 
+    return x, y
+
+def get_train_data(period = 20, split_at = 0.8):
+    trends = [
+        [up1, up2],
+        [down1, down2],
+        [flat1,flat2,flat3,flat4]
+    ]
+
+    x, y = add_trends(trends, period)
+
     assert(len(x) == len(y))
     print("total training set:",len(x))
 
     x = np.array(x)
     y = np.array(y)
 
-
     x = preprocessing.minmax_scale(x, axis=1)
     x, y = shuffle(x, y) #, random_state=0)
 
     return x, y
 
-    '''
-    split_index = int(len(x) * split_at)
-    sx = np.split(x, [split_index])
-    sy = np.split(y, [split_index])
-    return (sx[0], sy[0]), (sx[1], sy[1])
-    '''
 
 if __name__ == '__main__':
     get_train_data()
