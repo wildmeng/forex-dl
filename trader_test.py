@@ -22,7 +22,7 @@ if __name__ == '__main__':
     #cerebro.adddata(data0)
 
     data0 = bt.feeds.GenericCSVData(
-    dataname='./eurusd-1m/DAT_ASCII_EURUSD_M1_201904-copy.csv',
+    dataname='./data/DAT_ASCII_EURUSD_M1_2018.csv',
 
     fromdate=datetime(2019, 4, 1),
     todate=datetime(2019, 4, 10),

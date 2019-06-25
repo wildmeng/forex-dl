@@ -80,9 +80,9 @@ def add_trends(trends, period):
                     y.append(vects[i].tolist())
                     # save plot
                     x1 = np.linspace(0.0, c*2*np.pi, period)
-                    plt.plot(x1, result,'--bo')
-                    plt.savefig('./train-data/%d-%d.png'%(i, fig_num))
-                    plt.clf()
+                    #plt.plot(x1, result,'--bo')
+                    #plt.savefig('./train-data/%d-%d.png'%(i, fig_num))
+                    #plt.clf()
                     fig_num += 1
 
     return x, y
@@ -108,7 +108,6 @@ def blend_trends(trends, period):
             y = merge_trend(pair[0], pair[1], period, 6, 4)
             plt.plot(x1, y,'--bo')
             plt.show()
-
 
 
 def get_train_data(period = 40, split_at = 0.8):

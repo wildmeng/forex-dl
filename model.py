@@ -98,8 +98,7 @@ def showdata(p = 20):
 
 
 if __name__ == '__main__':
-    model = \
-        (20)
+    model = get_model(30)
     '''
     x = np.array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,13,12,11,10,9,8])
     x = np.reshape(x, (1,20))
@@ -107,4 +106,4 @@ if __name__ == '__main__':
     trend = model.predict(x)
     print(trend)
     '''
-    showdata(20)
+    #showdata(20)
