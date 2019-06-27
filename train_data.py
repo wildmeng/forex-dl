@@ -33,36 +33,36 @@ def down2(num, shift=0, cycles = 2, mag = 0.3):
 
     return y
 
-def flat1(num, shift, cycles = 2):
+def flat1(num, shift, cycles = 2, mag = 0.3):
     x = np.linspace(0.0, cycles*2*np.pi, num=num)
     y = np.sin(x+shift)
 
     return y
 
-def flat2(num, shift=0, cycles = 2):
+def flat2(num, shift=0, cycles = 2, mag = 0.3):
     y = np.linspace(1, 0, num)
     x = np.linspace(0.0, cycles*2*np.pi, num=num)
     y = np.sin(x+shift)*y
 
     return y
 
-def flat3(num, shift=0, cycles = 2):
+def flat3(num, shift=0, cycles = 2, mag = 0.3):
     y = np.linspace(0, 1, num)
     x = np.linspace(0.0, cycles*2*np.pi, num=num)
     y = np.sin(x+shift)*y
 
     return y
 
-def flat4(num, shift, cycles = 2):
-    y1 = np.linspace(0, 1, num/2)
-    y2 = np.linspace(1, 0, num-num/2)
+def flat4(num, shift, cycles = 2, mag = 0.3):
+    y1 = np.linspace(0, 1, num//2)
+    y2 = np.linspace(1, 0, num-num//2)
     x = np.linspace(0.0, cycles*2*np.pi, num=num)
     y = np.concatenate((y1,y2))
     y = np.sin(x+shift)*y
 
     return y
 
-def flat5(num, shift=0, cycles = 4):
+def flat5(num, shift=0, cycles = 4, mag = 0.3):
     y1 = np.linspace(1, 0, num)
     x = np.linspace(0.0, cycles*2*np.pi, num=num)
 
@@ -72,7 +72,7 @@ def flat5(num, shift=0, cycles = 4):
 
     return y
 
-def flat6(num, shift=0, cycles = 4):
+def flat6(num, shift=0, cycles = 4, mag = 0.3):
     y1 = np.linspace(0, 1, num)
     x = np.linspace(0.0, cycles*2*np.pi, num=num)
 
@@ -93,16 +93,17 @@ def add_trends(trends, period):
             for c in range(2, period//4):
                 shifts = np.linspace(0.0, np.pi, 10)
                 for shift in shifts:
-                    result = ts(period, shift, c)
-                    result = preprocessing.minmax_scale(result)
-                    x.append(result)
-                    y.append(vects[i].tolist())
-                    # save plot
-                    #x1 = np.linspace(0.0, c*2*np.pi, period)
-                    #plt.plot(x1, result,'--bo')
-                    #plt.savefig('./train-data/%d-%d.png'%(i, fig_num))
-                    #plt.clf()
-                    fig_num += 1
+                    for mag in np.linspace(0.1, 0.6, 5):
+                        result = ts(period, shift, c, mag)
+                        result = preprocessing.minmax_scale(result)
+                        x.append(result)
+                        y.append(vects[i].tolist())
+                        # save plot
+                        #x1 = np.linspace(0.0, c*2*np.pi, period)
+                        #plt.plot(x1, result,'--bo')
+                        #plt.savefig('./train-data/%d-%d.png'%(i, fig_num))
+                        #plt.clf()
+                        #fig_num += 1
 
     return x, y
 
@@ -137,8 +138,8 @@ def get_train_data(period = 20, split_at = 0.8):
     ]
 
 
-    blend_trends(trends, period)
-    '''
+    #blend_trends(trends, period)
+
     x, y = add_trends(trends, period)
 
     assert(len(x) == len(y))
@@ -151,7 +152,7 @@ def get_train_data(period = 20, split_at = 0.8):
     x, y = shuffle(x, y) #, random_state=0)
 
     return x, y
-    '''
+
 
 
 if __name__ == '__main__':

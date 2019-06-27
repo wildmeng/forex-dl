@@ -24,10 +24,10 @@ def get_model(num=10):
     num_classes = y_train.shape[1]
 
     model = Sequential()
-    model.add(Dense(128, activation='relu', input_shape=(input_cols,)))
-    #model.add(Dropout(0.2))
-    model.add(Dense(64, activation='relu'))
-    #model.add(Dropout(0.2))
+    model.add(Dense(512, activation='relu', input_shape=(input_cols,)))
+    model.add(Dropout(0.2))
+    model.add(Dense(256, activation='relu'))
+    model.add(Dropout(0.2))
     model.add(Dense(num_classes, activation='softmax'))
 
     # model.summary()
@@ -45,15 +45,15 @@ def get_model(num=10):
 
     #score = model.evaluate(x_test, y_test, verbose=1)
 
-    '''
+    #'''
     plt.plot(history.history['loss'])
     #plt.plot(history.history['val_loss'])
     plt.title('model loss')
     plt.ylabel('loss')
     plt.xlabel('epoch')
     #plt.legend(['train', 'test'], loc='upper left')
-    #plt.show()
-    '''
+    plt.show()
+    #'''
 
     return model
 
