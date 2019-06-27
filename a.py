@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button, RadioButtons
+import pandas as pd
+from sklearn import preprocessing
+from matplotlib.finance import candlestick_ohlc
 
 def autoscale_y(ax,margin=0.1):
     """This function rescales the y-axis based on the data that is visible given the current xlim of the axis.
@@ -29,21 +32,24 @@ def autoscale_y(ax,margin=0.1):
 
     ax.set_ylim(bot,top)
 
+csv_file = "./data/DAT_ASCII_EURUSD_M1_2018.csv"
+df = pd.read_csv(csv_file, sep=';')
+index = 0
+x = df.close[index: index+20]
+x = preprocessing.minmax_scale(x)
+print(x)
+
 fig, ax = plt.subplots()
 plt.subplots_adjust(left=0.25, bottom=0.25)
-t = np.arange(0.0, 1.0, 0.001)
-a0 = 5
-f0 = 3
-s = a0*np.sin(2*np.pi*f0*t)
-l, = plt.plot(t, s, lw=2, color='red')
-plt.axis([0, 1, -10, 10])
+l, = plt.plot(np.arange(20), x, '--bo',lw=2, color='red')
+#plt.axis([0, 1, -10, 10])
 
 axcolor = 'lightgoldenrodyellow'
 axfreq = plt.axes([0.25, 0.1, 0.65, 0.03], facecolor=axcolor)
 axamp = plt.axes([0.25, 0.15, 0.65, 0.03], facecolor=axcolor)
 
-sfreq = Slider(axfreq, 'Freq', 0.1, 30.0, valinit=f0)
-samp = Slider(axamp, 'Amp', 0.1, 10.0, valinit=a0)
+sfreq = Slider(axfreq, 'Freq', 0.1, 30.0, valinit=0)
+samp = Slider(axamp, 'Amp', 0.1, 10.0, valinit=0)
 
 plt.autoscale(enable=True, axis="y", tight=True)
 
@@ -61,8 +67,14 @@ button = Button(resetax, 'Reset', color=axcolor, hovercolor='0.975')
 
 
 def reset(event):
-    sfreq.reset()
-    samp.reset()
+    global index
+    index += 1
+    x = df.close[index: index+20]
+    x = preprocessing.minmax_scale(x)
+    l.set_ydata(x)
+    autoscale_y(ax)
+    fig.canvas.draw_idle()
+
 
 button.on_clicked(reset)
 

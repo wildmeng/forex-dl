@@ -5,30 +5,32 @@ from sklearn.utils import shuffle
 import math
 import itertools
 
-def up1(num, shift, cycles = 2):
-    p = 0.5
+def up1(num, shift=0, cycles = 2, mag = 0.3):
     x = np.linspace(0.0, 2*cycles*np.pi, num=num)
-    y = x*p + np.sin(x+shift)
+    y = np.linspace(0, 1, num)
+    y += mag*np.sin(x+shift)
 
     return y
 
-def up2(num, shift, cycles = 2):
-    p = 1.06
+def up2(num, shift=0, cycles = 2, mag = 0.3):
     x = np.linspace(0.0, 2*cycles*np.pi, num=num)
-    y = np.power(p,x) + np.sin(x+shift)
-    return y
-
-def down1(num, shift, cycles = 2):
-    p = -0.5
-    x = np.linspace(0.0, 2*cycles*np.pi, num=num)
-    y = x*p + np.sin(x+shift)
+    y = np.geomspace(1, 2, num)
+    y += mag*np.sin(x+shift)
 
     return y
 
-def down2(num, shift, cycles = 2):
-    p = 1.06
-    x = np.linspace(0.0, cycles*2*np.pi, num=num)
-    y = -np.power(p,x) + np.sin(x+shift)
+def down1(num, shift=0, cycles = 2, mag = 0.3):
+    x = np.linspace(0.0, 2*cycles*np.pi, num=num)
+    y = np.linspace(1, 0, num)
+    y += mag*np.sin(x+shift)
+
+    return y
+
+def down2(num, shift=0, cycles = 2, mag = 0.3):
+    x = np.linspace(0.0, 2*cycles*np.pi, num=num)
+    y = np.geomspace(2, 1, num)
+    y += mag*np.sin(x+shift)
+
     return y
 
 def flat1(num, shift, cycles = 2):
@@ -37,30 +39,47 @@ def flat1(num, shift, cycles = 2):
 
     return y
 
-def flat2(num, shift, cycles = 2):
+def flat2(num, shift=0, cycles = 2):
+    y = np.linspace(1, 0, num)
     x = np.linspace(0.0, cycles*2*np.pi, num=num)
-    y = (np.power(1.05, -x))*np.sin(x+shift)
+    y = np.sin(x+shift)*y
 
     return y
 
-def flat3(num, shift, cycles = 2):
+def flat3(num, shift=0, cycles = 2):
+    y = np.linspace(0, 1, num)
     x = np.linspace(0.0, cycles*2*np.pi, num=num)
-    y = (np.power(1.05, x))*np.sin(x+shift)
+    y = np.sin(x+shift)*y
 
     return y
 
 def flat4(num, shift, cycles = 2):
-    xlen = 7*np.pi
-    def f1(x):
-        return (np.power(1.03, x)) * np.sin(x)
+    y1 = np.linspace(0, 1, num/2)
+    y2 = np.linspace(1, 0, num-num/2)
+    x = np.linspace(0.0, cycles*2*np.pi, num=num)
+    y = np.concatenate((y1,y2))
+    y = np.sin(x+shift)*y
 
-    a = math.pow(1.03, xlen/2)
+    return y
 
-    def f2(x):
-        return (np.power(1.03, -(x - xlen/2))) * np.sin(x) * a
+def flat5(num, shift=0, cycles = 4):
+    y1 = np.linspace(1, 0, num)
+    x = np.linspace(0.0, cycles*2*np.pi, num=num)
 
-    x1 = np.linspace(0.0, cycles*2*np.pi, num=num)
-    y = np.piecewise(x1, [x1 < xlen / 2, x1 >= xlen/2], [f1, f2])
+    y = np.sin(x+shift)
+    y += 1
+    y = y*y1
+
+    return y
+
+def flat6(num, shift=0, cycles = 4):
+    y1 = np.linspace(0, 1, num)
+    x = np.linspace(0.0, cycles*2*np.pi, num=num)
+
+    y = np.sin(x+shift)
+    y += 1
+    y = y*y1
+
     return y
 
 def add_trends(trends, period):
@@ -71,7 +90,7 @@ def add_trends(trends, period):
     vects = np.eye(len(trends))
     for i, t in enumerate(trends):
         for ts in t:
-            for c in range(2, 5):
+            for c in range(2, period//4):
                 shifts = np.linspace(0.0, np.pi, 10)
                 for shift in shifts:
                     result = ts(period, shift, c)
@@ -79,7 +98,7 @@ def add_trends(trends, period):
                     x.append(result)
                     y.append(vects[i].tolist())
                     # save plot
-                    x1 = np.linspace(0.0, c*2*np.pi, period)
+                    #x1 = np.linspace(0.0, c*2*np.pi, period)
                     #plt.plot(x1, result,'--bo')
                     #plt.savefig('./train-data/%d-%d.png'%(i, fig_num))
                     #plt.clf()
@@ -110,11 +129,11 @@ def blend_trends(trends, period):
             plt.show()
 
 
-def get_train_data(period = 40, split_at = 0.8):
+def get_train_data(period = 20, split_at = 0.8):
     trends = [
         [up1, up2],
         [down1, down2],
-        [flat1,flat2,flat3,flat4]
+        [flat1,flat2,flat3,flat4, flat5, flat6]
     ]
 
 
