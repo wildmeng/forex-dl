@@ -67,7 +67,7 @@ def up():
             plt.show()
 
 
-def flat2(num, shift=-np.pi/2, cycles = 40):
+def flat6(num, shift=0, cycles = 4, mag = 0.3):
     y1 = np.linspace(0, 1, num)
     x = np.linspace(0.0, cycles*2*np.pi, num=num)
 
@@ -77,6 +77,7 @@ def flat2(num, shift=-np.pi/2, cycles = 40):
 
     return y
 
+
 #rotate_list(a)
-plt.plot(flat2(20),'--bo')
+plt.plot(flat6(20),'--bo')
 plt.show()

@@ -17,7 +17,7 @@ from plotly.offline import plot, iplot
 def get_model(num=10):
     batch_size = 32
     num_classes = 2
-    epochs = 20
+    epochs = 10
 
     x_train, y_train = get_train_data(num, 0.8)
     input_cols = x_train.shape[1]
@@ -25,9 +25,9 @@ def get_model(num=10):
 
     model = Sequential()
     model.add(Dense(512, activation='relu', input_shape=(input_cols,)))
-    model.add(Dropout(0.2))
+    model.add(Dropout(0.3))
     model.add(Dense(256, activation='relu'))
-    model.add(Dropout(0.2))
+    model.add(Dropout(0.3))
     model.add(Dense(num_classes, activation='softmax'))
 
     # model.summary()
@@ -63,8 +63,6 @@ def showdata(p = 20):
     csv_file = "data/XBTUSD_5m_70000_train.csv"
     df = pd.read_csv(csv_file)
 
-
-
     for start in range(1500, 1700):
         end = start + p
         trace = go.Ohlc(#x=df['DTYYYYMMDD'],
@@ -94,11 +92,11 @@ def showdata(p = 20):
         names = ['up', 'down', 'flat']
         index = np.argmax(trend[0])
         #print(names[index], p[0][index])
-        py.offline.plot(data, filename='data/%d-test-%s-%.2f.html'%(start, names[index], trend[0][index]), auto_open=False)
+        py.offline.plot(data, filename='data/%d-test-%s-%.2f-%.2f-%02f.html'%(start, names[index], trend[0][0], trend[0][1], trend[0][2]), auto_open=False)
 
 
 if __name__ == '__main__':
-    model = get_model(30)
+    #model = get_model(30)
     '''
     x = np.array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,13,12,11,10,9,8])
     x = np.reshape(x, (1,20))
@@ -106,4 +104,4 @@ if __name__ == '__main__':
     trend = model.predict(x)
     print(trend)
     '''
-    #showdata(20)
+    showdata(20)

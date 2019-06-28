@@ -82,6 +82,26 @@ def flat6(num, shift=0, cycles = 4, mag = 0.3):
 
     return y
 
+def flat7(num, shift=0, cycles = 4, mag = 0.3):
+    y1 = np.linspace(1, 0, num)
+    x = np.linspace(0.0, cycles*2*np.pi, num=num)
+
+    y = np.sin(x+shift)
+    y += 1
+    y = y*y1
+
+    return -y
+
+def flat8(num, shift=0, cycles = 4, mag = 0.3):
+    y1 = np.linspace(0, 1, num)
+    x = np.linspace(0.0, cycles*2*np.pi, num=num)
+
+    y = np.sin(x+shift)
+    y += 1
+    y = y*y1
+
+    return -y
+
 def add_trends(trends, period):
     fig_num = 0
 
@@ -108,15 +128,16 @@ def add_trends(trends, period):
     return x, y
 
 
-def merge_trend(f1, f2, num, cycles, split_cycles):
-    n = int(num*split_cycles//cycles)
-    y1 = f1(n, 0, split_cycles)
-    y2 = f2(num-n, np.pi, cycles - split_cycles)
-
-    y2 += (y1[n-1] - y2[0])
+def merge_trend(f1, f2, num, c1, c2):
+    num1 = num*7//10
+    y1 = f1(num1, 0, 4)
+    y1 = preprocessing.minmax_scale(y1)
+    y2 = f2(num-num1, 0, 2)
+    y2 = preprocessing.minmax_scale(y2)
+    y2 *= 0.5
+    y2 += (y1[num1-1] - y2[0])
 
     return list(y1) + list(y2)
-
 
 def blend_trends(trends, period):
     all_trends = list(itertools.permutations(trends, 2))
@@ -134,11 +155,10 @@ def get_train_data(period = 20, split_at = 0.8):
     trends = [
         [up1, up2],
         [down1, down2],
-        [flat1,flat2,flat3,flat4, flat5, flat6]
+        [flat1,flat2,flat3,flat4,flat5,flat6,flat7,flat8]
     ]
 
-
-    #blend_trends(trends, period)
+    # blend_trends(trends, period)
 
     x, y = add_trends(trends, period)
 
